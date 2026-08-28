@@ -1,0 +1,18 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+import Code.Universality.IsingFermionicSquareWiredOneVisitInsertedPhase
+
+#print axioms StatMech.Universality.carrierAdjacentSum
+#print axioms StatMech.Universality.wiredTurnSteps_drop_sum_eq_adjacentSum
+#print axioms StatMech.Universality.FKIsingDobrushinDomain.windingPhase_eq_of_winding_eq_add_four_pi_mul_int
+#print axioms StatMech.Universality.int_eighth_turn_mod_sixteen_of_exp_eq_neg_one
+#print axioms StatMech.Universality.fkIsingSquareWired_one_visit_west_inserted_phase_of_cycle_turn_mod_sixteen
+#print axioms StatMech.Universality.fkIsingSquareWired_one_visit_east_inserted_phase_of_cycle_turn_mod_sixteen
+#print axioms StatMech.Universality.fkIsingSquareWired_one_visit_west_inserted_phase_of_cycle_turn
+#print axioms StatMech.Universality.fkIsingSquareWired_one_visit_east_inserted_phase_of_cycle_turn

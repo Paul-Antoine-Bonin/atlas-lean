@@ -1,0 +1,25 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+import Code.FrontierD.SixVertexFourByFourTwoCycleMatching
+import Code.FrontierD.SixVertexHorizontalOffDiagonalTwoCycleMatching
+
+#print axioms StatMech.FrontierD.sixVertexFourByFourAuditedCoordinateRows_invariant
+#print axioms StatMech.FrontierD.sixVertexFourByFourAuditedCoordinateSourcePair_valid
+#print axioms StatMech.FrontierD.sixVertexFourByFourAuditedCoordinateTargetPair_valid
+#print axioms StatMech.FrontierD.sixVertexFourByFourAuditedCoordinate_fineRelated
+#print axioms StatMech.FrontierD.sixVertexFourByFourAuditedCoordinateSourcePair_injective
+#print axioms StatMech.FrontierD.sixVertexFourByFourAuditedCoordinateTargetPair_injective
+#print axioms StatMech.FrontierD.sixVertexFourByFourAuditedCoordinate_matching
+#print axioms StatMech.FrontierD.sixVertexFourByFourAuditedCoordinateParameters_injective
+#print axioms StatMech.FrontierD.sixVertexFourByFourAuditedCoordinateParameterImage_card
+#print axioms StatMech.FrontierD.sixVertexFourByFourAuditedCoordinateParameterComplement_card
+#print axioms StatMech.FrontierD.sixVertexHorizontalOffDiagonalTwoCycleSupport_profiles_ne
+#print axioms
+  StatMech.FrontierD.sixVertexMarkedTraceCoefficientwiseLogConcave_of_offDiagonalTwoCycleMatching
+#print axioms StatMech.FrontierD.sixVertexSectorTrace_logConcave_of_offDiagonalTwoCycleMatching

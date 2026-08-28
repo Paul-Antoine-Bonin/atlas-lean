@@ -1,0 +1,29 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+import Code.FrontierD.SixVertexTwoCycleCapacityHall
+
+namespace StatMech.FrontierD
+
+#print axioms finiteRelationHall_of_keyCapacity
+#print axioms FiniteKeyCapacityTransport.hall
+#print axioms finiteKeyCapacityHall_of_injectiveRouting
+#print axioms sixVertexPairFineUnionKeyTwoCycleRelated_refl
+#print axioms sixVertexPairFineUnionKeyTwoCycleRelated_symm
+#print axioms sixVertexPairFineUnionKeyTwoCycleRelated_sound
+#print axioms sixVertexPairFineUnionKeyTwoCycleRelated_complete
+#print axioms twoCycleKeyCapacityHall_of_transports
+#print axioms twoCycleKeyCapacityHall_of_injectiveKeyRoutings
+#print axioms actualDeficitTokenHall_of_twoCycleKeyCapacityHall
+#print axioms offDiagonalTwoCycleMatching_of_keyCapacityHall
+#print axioms sixVertexMarkedTraceCoefficientwiseLogConcave_of_keyCapacityHall
+#print axioms sixVertexSectorTrace_logConcave_of_keyCapacityHall
+#print axioms sixVertexMarkedTraceCoefficientwiseLogConcave_of_keyCapacityTransports
+#print axioms sixVertexSectorTrace_logConcave_of_keyCapacityTransports
+
+end StatMech.FrontierD

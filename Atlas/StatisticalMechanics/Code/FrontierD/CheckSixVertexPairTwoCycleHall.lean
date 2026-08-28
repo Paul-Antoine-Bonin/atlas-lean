@@ -1,0 +1,27 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+import Code.FrontierD.SixVertexPairTwoCycleHall
+
+open StatMech.FrontierD
+
+#print axioms SixVertexConfigurationPairTwoCycleFineRelated
+#print axioms SixVertexConfigurationPairTwoCycleFineRelated.totalC
+#print axioms SixVertexConfigurationPairTwoCycleFineHall
+#print axioms configurationPairTwoCycleFineHall_iff_exists_injective
+#print axioms SixVertexConfigurationPairFineProfileFiber
+#print axioms SixVertexConfigurationPairTwoCycleFineProfileRelated
+#print axioms SixVertexConfigurationPairTwoCycleFineProfileFiberHall
+#print axioms configurationPairTwoCycleFineProfileFiberHall_iff
+#print axioms configurationPairTwoCycleFineHall_of_profileFiberHall
+#print axioms configurationPairTwoCycleFineProfileFiberHall_of_Hall
+#print axioms configurationPairTwoCycleFineHall_iff_profileFiberHall
+#print axioms configurationPairTotalCReconnection_of_twoCycleFineHall
+#print axioms configurationPairTotalCFibers_of_twoCycleFineHall
+#print axioms sixVertexMarkedTraceCoefficientwiseLogConcave_of_twoCycleFineHall
+#print axioms sixVertexSectorTrace_logConcave_of_twoCycleFineHall

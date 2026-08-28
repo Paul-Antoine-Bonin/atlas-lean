@@ -1,0 +1,24 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+import Code.Ising.LebowitzPfisterReplicaOrbitPooledTraceFiber
+
+#print axioms StatMech.Ising.lpReplicaDecoratedOrbitAtomFixedRowGateData
+#print axioms StatMech.Ising.lpReplicaOffdiagPooledSourceIntermediate
+#print axioms StatMech.Ising.lpReplicaOffdiagPooledTargetIntermediate
+#print axioms StatMech.Ising.lpReplicaOffdiagPooledSource_card_eq_sum_intermediateFibers
+#print axioms StatMech.Ising.lpReplicaOffdiagPooledTarget_card_eq_sum_intermediateFibers
+#print axioms StatMech.Ising.lpReplicaOffdiagOrbitAtomCardInequality_of_pooledIntermediateInjections
+#print axioms StatMech.Ising.lpReplicaOffdiagPooledSource_card_eq_sum_traceFibers
+#print axioms StatMech.Ising.lpReplicaOffdiagPooledTarget_card_eq_sum_traceFibers
+#print axioms StatMech.Ising.lpReplicaOffdiagOrbitAtomCardInequality_of_pooledTraceFiberInjections
+#print axioms StatMech.Ising.card_lpReplicaAggregateDecoratedSource
+#print axioms StatMech.Ising.card_lpReplicaAggregateDecoratedTarget
+#print axioms StatMech.Ising.lpReplicaAggregateDecoratedCard_of_injection
+#print axioms
+  StatMech.Ising.lpReplicaAggregateProfileOrbitInequality_of_aggregateDecoratedInjections

@@ -1,0 +1,20 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+import Code.FrontierD.FKRectRefinedBoundaryRepeatedVisits
+
+#print axioms StatMech.FrontierD.fkRectRefinedBoundaryDarts_add_center
+#print axioms StatMech.FrontierD.fkRectRefinedRawInteraction_translated_boundary_eq_matchedVisits
+#print axioms StatMech.FrontierD.fkRectRefinedRawInteraction_repeated_boundary_edge_eq_sum_matchedVisits
+#print axioms StatMech.FrontierD.fkRectRefinedRawInteraction_translated_boundary_openEdge_eq_zero
+#print axioms StatMech.FrontierD.fkRectRefinedRawInteraction_repeated_boundary_openEdge_eq_zero
+#print axioms StatMech.FrontierD.fkRectRefinedBoundaryMatchedVisitTrace_nonneg_of_avoid_east
+#print axioms StatMech.FrontierD.fkRectRefinedBoundaryMatchedVisitTrace_eq_zero_of_avoid_west_east
+#print axioms StatMech.FrontierD.fkRectRefinedBoundaryMatchedVisitTrace_canonical_pos_of_avoid_east
+#print axioms StatMech.FrontierD.fkRectRefinedRawInteraction_repeated_boundary_edge_ne_zero_of_avoid_east
+#print axioms StatMech.FrontierD.fkRectRefinedRawInteraction_repeated_boundary_edge_ne_zero_of_not_reachable

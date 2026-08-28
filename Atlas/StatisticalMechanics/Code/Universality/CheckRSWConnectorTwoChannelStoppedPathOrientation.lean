@@ -1,0 +1,23 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+import Code.Universality.RSWConnectorTwoChannelStoppedPathOrientation
+
+#print axioms StatMech.Universality.RlcStoppedTwoChannelOrientedCommonCycleState
+#print axioms StatMech.Universality.rlc_stoppedTwoChannelOrientedCommonCycleState_of_noGood
+#print axioms StatMech.Universality.RlcStoppedTwoChannelOrientedCandidateStateAt
+#print axioms StatMech.Universality.RlcStoppedTwoChannelOrientedCommonCycleState.candidateState
+#print axioms StatMech.Universality.RlcStoppedTwoChannelOrientedCommonCycleState.candidateTransition
+#print axioms StatMech.Universality.RlcStoppedTwoChannelOrientedCommonCycleState.boundaryArc_of_failure
+#print axioms StatMech.Universality.RlcStoppedTwoChannelOrientedCommonCycleState.pims_success_of_failure
+#print axioms StatMech.Universality.RlcStoppedTwoChannelOrientedCandidateStateAt.boundaryArc_of_failure
+#print axioms StatMech.Universality.RlcStoppedTwoChannelOrientedCandidateStateAt.pims_success_of_failure
+#print axioms StatMech.Universality.RlcStoppedTwoChannelCandidateResolved
+#print axioms StatMech.Universality.RlcStoppedTwoChannelOrientedCandidateStateAt.resolved_of_failure
+#print axioms StatMech.Universality.RlcStoppedTwoChannelOrientedCommonCycleState.no_unresolved_candidate
+#print axioms StatMech.Universality.rlc_stoppedTwoChannel_good_or_pimsSuccess_of_failures

@@ -1,0 +1,21 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+import Code.FK.PeriodicPlanarSheffieldHalfPlaneStripUnion
+
+open StatMech.FK.PeriodicPlanar
+
+#print axioms PeriodicPlaneEmbedding.iInter_halfPlaneStripPairMergeErrorUnion
+#print axioms PeriodicPlaneEmbedding.halfPlaneStripPairMergeErrorUnion_measureReal_tendsto
+#print axioms PeriodicPlaneEmbedding.exists_shift_stripPairMergeErrorUnion_measureReal_lt
+#print axioms PeriodicPlaneEmbedding.halfPlaneStripPairMergeErrorUnion_measureReal_vertical
+#print axioms PeriodicPlaneEmbedding.exists_shift_stripPairMergeErrorUnion_measureReal_lt_with_sources
+#print axioms PeriodicPlaneEmbedding.exists_inward_adjacent_stripPlacement
+#print axioms PeriodicPlaneEmbedding.exists_shift_stripPairMergeErrorUnion_measureReal_lt_with_margin
+#print axioms PeriodicPlaneEmbedding.exists_inward_adjacent_stripPlacement_with_margin
+#print axioms PeriodicPlaneEmbedding.exists_inward_twoStep_stripPlacement_with_margin

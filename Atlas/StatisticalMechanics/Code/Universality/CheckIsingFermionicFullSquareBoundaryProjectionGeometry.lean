@@ -1,0 +1,33 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+import Code.Universality.IsingFermionicFullSquareBoundaryProjectionGeometry
+
+namespace StatMech.Universality
+namespace FKIsingSquareBoundaryLayerCoordinateOneForm
+
+#print axioms halfDiagonal_displacement_le_scale
+#print axioms fullSquareVertexBoundaryProjection_dist
+#print axioms fullSquareFaceFixedBoundaryProjection_dist_le
+#print axioms fullSquareVertexFreeBoundaryProjection_dist
+#print axioms fullSquareFaceFreeBoundaryProjection_dist_le
+#print axioms fullSquareVertexBoundaryProjection_mem_leftSide
+#print axioms fullSquareFaceFixedBoundaryProjection_mem_freeSides
+#print axioms fullSquareVertexFreeBoundaryProjection_mem_freeSides
+#print axioms fullSquareFaceFreeBoundaryProjection_mem_leftSide
+#print axioms PhysicalBoundaryProjectionSampling.ofFullSquareProjections
+#print axioms FullSquareOrdinaryBoundaryProjectionTraceData.toProjectionData
+#print axioms FullSquareOrdinaryBoundaryProjectionTraceData.ofSideTraces
+#print axioms fullSquareOrdinaryBoundaryProjectionCarrier_finite
+#print axioms FullSquareOrdinaryBoundaryProjectionTraceData.ofCarrierTraces
+#print axioms FullSquareOrdinaryBoundaryProjectionTraceData.ofCarrierSideTraces
+#print axioms PhysicalEndpointLocalizedMarkedClampedRobinInputs.ofCarrierTracesAndRange
+#print axioms PhysicalEndpointLocalizedMarkedClampedRobinInputs.ofCarrierSideTracesAndRange
+
+end FKIsingSquareBoundaryLayerCoordinateOneForm
+end StatMech.Universality
