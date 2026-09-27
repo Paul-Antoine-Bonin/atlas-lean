@@ -138,6 +138,26 @@ concern the Lean model.  Its correspondence to the pinned C is supported by
 machine-verified source excerpts and human-reviewed transcription, not by a
 machine-checked C-refinement proof.
 
+Two known departures from the literal C are deliberate modeling choices:
+
+- **Minrun mask width.**  `merge_init` computes `(1 << ms->mr_e) - 1`, where
+  `1` is a 32-bit `int`.  The transcription evaluates this shift in 64 bits.
+  The two agree whenever `mr_e <= 30`, which holds for every list shorter
+  than 2^36 elements.  For longer lists (still admitted by `PY_LIST_MAX`),
+  the C shift overflows `int`, which is undefined behavior, so the minrun
+  results describe the intended 64-bit arithmetic rather than the pinned C
+  at those sizes.
+- **Key storage for short keyed sorts.**  The model keeps the list being
+  sorted and the merge scratch storage in two separate stores.  In C, a
+  keyed sort of fewer than 128 elements places its keys array inside
+  `ms.temparray` (at `&ms.temparray[saved_ob_size+1]`), the same stack buffer
+  that `merge_init` uses as inline scratch storage.  The scratch region
+  occupies the first `2 * ms.alloced <= saved_ob_size + 1` slots, so the two
+  regions do not overlap, but this layout fact is not proved in Lean.  The
+  `memcpy` provenance and inline-capacity results hold for the model's
+  separated stores; they do not by themselves establish non-overlap within
+  `temparray`.
+
 The cost theorem uses the positive lengths of the runs actually pushed by
 `list_sort_impl`, after `count_run` and any adaptive `minrun_next`/
 `binarysort` extension.  It does not use the original maximal-natural-run
