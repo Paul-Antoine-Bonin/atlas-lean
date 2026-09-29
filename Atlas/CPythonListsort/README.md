@@ -157,6 +157,13 @@ results instead consume the unconditional bound `1 ≤ minrun ≤ 64`, proved by
 `minrunNextN_output_bounds`
 (`Code/Equivalence/MinrunResults.lean:295`).
 
+For very large lists, this bound depends on the convention above.  Once a list
+has 2^37 (about 137 billion) or more elements, the mask can come out negative.
+When the model widens a negative mask to 64 bits, it fills the new upper bits
+with zeros.  Standard C would fill them with ones, which keeps the value
+negative.  With C's rule, the bound would fail: a list of 2^39 - 2^32 elements
+would get a minrun of 127.
+
 The cost theorem uses the positive lengths of the runs actually pushed by
 `list_sort_impl`, after `count_run` and any adaptive `minrun_next`/
 `binarysort` extension.  It does not use the original maximal-natural-run
