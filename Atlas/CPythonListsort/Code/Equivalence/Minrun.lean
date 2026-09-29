@@ -58,11 +58,71 @@ private theorem minrunExponentSpecLoop_le (fuel listSize exponent : Nat) :
       · have := ih (exponent + 1)
         omega
 
+/-- In the selected 32-bit `BitVec` convention, a shift below the word width
+has its mathematical power-of-two value. -/
+private theorem one_shift32_toNat {exponent : Nat} (hexponent : exponent < 32) :
+    (((1 : BitVec 32) <<< exponent).toNat) = 2 ^ exponent := by
+  have hpow : 2 ^ exponent < 2 ^ 32 :=
+    Nat.pow_lt_pow_right (a := 2) (by omega) hexponent
+  have hone : (1 : BitVec 32).toNat = 1 := by decide
+  rw [BitVec.toNat_shiftLeft, Nat.shiftLeft_eq]
+  rw [hone, one_mul, Nat.mod_eq_of_lt hpow]
+
+private theorem one_shift_toNat {exponent : Nat} (hexponent : exponent < 64) :
+    (((1 : PySSize) <<< exponent).toNat) = 2 ^ exponent := by
+  have hpow : 2 ^ exponent < 2 ^ 64 :=
+    Nat.pow_lt_pow_right (a := 2) (by omega) hexponent
+  have hone : (1 : PySSize).toNat = 1 := by decide
+  rw [BitVec.toNat_shiftLeft, Nat.shiftLeft_eq]
+  rw [hone, one_mul, Nat.mod_eq_of_lt hpow]
+
+/-- Below the selected 32-bit `int` width, the transcription mask agrees with
+the mathematical `Py_ssize_t` mask used by the quotient/remainder specification. -/
+private theorem cIntMask_eq_fullMask {exponent : Nat}
+    (hexponent : exponent < 32) :
+    ((((1 : BitVec 32) <<< exponent) - 1).zeroExtend 64) =
+      ((1 : PySSize) <<< exponent) - 1 := by
+  have hone32 : (1 : BitVec 32).toNat = 1 := by decide
+  have hone64 : (1 : PySSize).toNat = 1 := by decide
+  have honeLe32 : (1 : BitVec 32) ≤ (1 : BitVec 32) <<< exponent := by
+    rw [BitVec.le_def, one_shift32_toNat hexponent]
+    simpa using Nat.one_le_two_pow
+  have honeLe64 : (1 : PySSize) ≤ (1 : PySSize) <<< exponent := by
+    rw [BitVec.le_def, one_shift_toNat (by omega)]
+    simpa using Nat.one_le_two_pow
+  apply BitVec.eq_of_toNat_eq
+  rw [BitVec.toNat_setWidth_of_le (by omega),
+    BitVec.toNat_sub_of_le honeLe32,
+    BitVec.toNat_sub_of_le honeLe64,
+    one_shift32_toNat hexponent,
+    one_shift_toNat (by omega), hone32, hone64]
+
 /--
-The transcribed initialization stores the mathematical exponent and its exact
-bit-mask, starts with zero residual, and reports the same bounded-loop status.
+The transcribed initialization stores the mathematical exponent, starts with
+zero residual, and reports the same bounded-loop status.  This part is
+independent of the width of C's mask expression.
 -/
-theorem minrunInit_eq_spec (listSize : PySSize) (hlistSize : listSize.Nonnegative) :
+theorem minrunInit_exponent_eq_spec
+    (listSize : PySSize) (hlistSize : listSize.Nonnegative) :
+    let specified := minrunExponentSpecLoop 64 listSize.toNat 0
+    (minrunInit listSize).mr_e.toNat = specified.1 ∧
+      (minrunInit listSize).mr_current = 0 ∧
+      (minrunInitTraced listSize).stopped = specified.2 := by
+  simp only [minrunInit, minrunInitTraced]
+  rw [minrunExponentLoop_eq_spec 64 listSize 0 hlistSize]
+  have hbound := minrunExponentSpecLoop_le 64 listSize.toNat 0
+  have hlt : (minrunExponentSpecLoop 64 listSize.toNat 0).1 < 2 ^ 64 := by
+    norm_num at hbound ⊢
+    omega
+  constructor
+  · rw [BitVec.toNat_ofNat, Nat.mod_eq_of_lt hlt]
+  simp
+
+/-- When the chosen exponent is below the selected `int` width, initialization
+also stores the exact mathematical low-bit mask. -/
+theorem minrunInit_eq_spec
+    (listSize : PySSize) (hlistSize : listSize.Nonnegative)
+    (hexponent : (minrunExponentSpecLoop 64 listSize.toNat 0).1 < 32) :
     let specified := minrunExponentSpecLoop 64 listSize.toNat 0
     (minrunInit listSize).mr_e.toNat = specified.1 ∧
       (minrunInit listSize).mr_mask = ((1 : PySSize) <<< specified.1) - 1 ∧
@@ -74,15 +134,10 @@ theorem minrunInit_eq_spec (listSize : PySSize) (hlistSize : listSize.Nonnegativ
   have hlt : (minrunExponentSpecLoop 64 listSize.toNat 0).1 < 2 ^ 64 := by
     norm_num at hbound ⊢
     omega
-  have hshift :
-      BitVec.ofNat 64 (1 <<< (minrunExponentSpecLoop 64 listSize.toNat 0).1) =
-        ((1 : PySSize) <<< (minrunExponentSpecLoop 64 listSize.toNat 0).1) := by
-    apply BitVec.eq_of_toNat_eq
-    simp [BitVec.toNat_ofNat, BitVec.toNat_shiftLeft]
   constructor
   · rw [BitVec.toNat_ofNat, Nat.mod_eq_of_lt hlt]
   constructor
-  · exact congrArg (fun x : PySSize => x - 1) hshift
+  · exact cIntMask_eq_fullMask hexponent
   simp
 
 /-- Mathematical quotient-and-remainder result of one adaptive-minrun step. -/
@@ -97,29 +152,36 @@ def minrunNextSpec (listlen current exponent : Nat) : MinrunNextSpec :=
   { result := total / 2 ^ exponent
     residual := total % 2 ^ exponent }
 
-private theorem one_shift_toNat {exponent : Nat} (hexponent : exponent < 64) :
-    (((1 : PySSize) <<< exponent).toNat) = 2 ^ exponent := by
-  have hpow : 2 ^ exponent < 2 ^ 64 :=
-    Nat.pow_lt_pow_right (a := 2) (by omega) hexponent
-  have hone : (1 : PySSize).toNat = 1 := by decide
-  rw [BitVec.toNat_shiftLeft, Nat.shiftLeft_eq]
-  rw [hone, one_mul, Nat.mod_eq_of_lt hpow]
-
-private theorem mask_toNat {exponent : Nat} (hexponent : exponent < 64) :
+private theorem mask_toNat {exponent : Nat} (hexponent : exponent < 32) :
     ((((1 : PySSize) <<< exponent) - 1).toNat) = 2 ^ exponent - 1 := by
   have honeToNat : (1 : PySSize).toNat = 1 := by decide
   have hone : (1 : PySSize) ≤ (1 : PySSize) <<< exponent := by
-    rw [BitVec.le_def, one_shift_toNat hexponent]
+    rw [BitVec.le_def, one_shift_toNat (by omega)]
     simpa using Nat.one_le_two_pow
-  rw [BitVec.toNat_sub_of_le hone, one_shift_toNat hexponent]
+  rw [BitVec.toNat_sub_of_le hone, one_shift_toNat (by omega)]
   rw [honeToNat]
+
+/-- The selected 32-bit transcription mask is always strictly smaller than the mathematical
+modulus selected by the exponent, even after the mask begins truncating. -/
+theorem cIntMinrunMask_toNat_lt_pow (exponent : Nat) :
+    (((((1 : BitVec 32) <<< exponent) - 1).zeroExtend 64).toNat) <
+      2 ^ exponent := by
+  by_cases hexponent : exponent < 32
+  · rw [cIntMask_eq_fullMask hexponent, mask_toNat hexponent]
+    exact Nat.sub_lt (pow_pos (by omega) _) (by omega)
+  · rw [BitVec.toNat_setWidth_of_le (by omega)]
+    have hmask32 : ((((1 : BitVec 32) <<< exponent) - 1).toNat) < 2 ^ 32 :=
+      ((((1 : BitVec 32) <<< exponent) - 1).isLt)
+    have hpow : 2 ^ 32 ≤ 2 ^ exponent :=
+      Nat.pow_le_pow_right (by omega) (by omega)
+    omega
 
 /--
 Under the C assertion's representability premise, `minrun_next` computes the
 specified quotient and remainder and its signed-overflow assertion succeeds.
 -/
 theorem minrunNext_eq_spec (state : MinrunState)
-    (hexponent : state.mr_e.toNat < 64)
+    (hexponent : state.mr_e.toNat < 32)
     (hmask : state.mr_mask = ((1 : PySSize) <<< state.mr_e.toNat) - 1)
     (hnoOverflow : state.mr_current.toNat + state.listlen.toNat < 2 ^ 63) :
     let specified :=

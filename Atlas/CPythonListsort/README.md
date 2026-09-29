@@ -138,6 +138,15 @@ concern the Lean model.  Its correspondence to the pinned C is supported by
 machine-verified source excerpts and human-reviewed transcription, not by a
 machine-checked C-refinement proof.
 
+The unsuffixed literal in `merge_init` makes its minrun-mask expression have
+type `int`; the selected v1 platform fixes `int` at 32 bits and zero-extends
+that bit pattern into the 64-bit stored word.  This is a project convention,
+not a claim about ISO C behavior for undefined large signed shifts.  Exact
+balanced-cycle equivalence is therefore limited to `mr_e < 32`; the public
+results instead consume the unconditional bound `1 ≤ minrun ≤ 64`, proved by
+`minrunNextN_output_bounds`
+(`Code/Equivalence/MinrunResults.lean:295`).
+
 The cost theorem uses the positive lengths of the runs actually pushed by
 `list_sort_impl`, after `count_run` and any adaptive `minrun_next`/
 `binarysort` extension.  It does not use the original maximal-natural-run
@@ -181,9 +190,11 @@ consumer of those declarations.
 ## Transcription-review provenance
 
 The development workflow human-reviewed and signed off all 22 non-container
-transcription nodes.  The pinned
-[`transcription` chapter](https://github.com/neelsomani/cpython-listsort-lean/tree/f6b0683ab871f8c6ce3b2c4de93ff49010e68afe/blueprint/roadmap/transcription)
-retains the source citations and reviewed Lean targets; its
+transcription nodes.  The local [`roadmap`](roadmap/README.md), including its
+[`transcription` chapter](roadmap/transcription/README.md), is exported from
+development commit
+[`7a5f47de2501d41980fafa0a363c61c2a2fa688c`](https://github.com/neelsomani/cpython-listsort-lean/commit/7a5f47de2501d41980fafa0a363c61c2a2fa688c)
+and retains the source citations and reviewed Lean targets.  Its
 [`commit history`](https://github.com/neelsomani/cpython-listsort-lean/commits/main/blueprint/roadmap/transcription)
 is the development-repository review record.  This provenance records human
 review; it is not a machine-checked refinement proof or a cryptographic

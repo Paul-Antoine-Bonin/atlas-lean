@@ -83,23 +83,23 @@ theorem minrunExponentCharacterization (listSize : PySSize)
   have hspec := minrunExponentSpecLoop_characterization 64 listSize.toNat 0 hwitness
   simpa using hspec
 
-/-- Named corollary: the chosen exponent is a valid 64-bit shift count. -/
+/-- Named corollary: the chosen exponent is below the `PySSize` word width. -/
 theorem minrunExponent_lt_64 (listSize : PySSize)
     (hlistSize : listSize.Nonnegative)
     (hmax : listSize.toNat ≤ PY_LIST_MAX) :
     (minrunExponentSpecLoop 64 listSize.toNat 0).1 < 64 :=
   (minrunExponentCharacterization listSize hlistSize hmax).2.1
 
-/-- Named corollary: the transcribed initialization stops and its mask shift is valid. -/
-theorem minrunInit_stops_and_shift_valid (listSize : PySSize)
+/-- Named corollary: initialization stops and its stored exponent is below 64. -/
+theorem minrunInit_stops_and_exponent_lt_64 (listSize : PySSize)
     (hlistSize : listSize.Nonnegative)
     (hmax : listSize.toNat ≤ PY_LIST_MAX) :
     (minrunInitTraced listSize).stopped = true ∧
       (minrunInit listSize).mr_e.toNat < 64 := by
-  have hinit := minrunInit_eq_spec listSize hlistSize
+  have hinit := minrunInit_exponent_eq_spec listSize hlistSize
   have hcharacterization := minrunExponentCharacterization listSize hlistSize hmax
   dsimp only at hinit hcharacterization ⊢
-  exact ⟨hinit.2.2.2.trans hcharacterization.1, hinit.1.trans_lt hcharacterization.2.1⟩
+  exact ⟨hinit.2.2.trans hcharacterization.1, hinit.1.trans_lt hcharacterization.2.1⟩
 
 /-- The selected exponent is at most 60 on a 64-bit build with 8-byte object pointers. -/
 theorem minrunExponent_le_60 (listSize : PySSize)
@@ -117,6 +117,210 @@ theorem minrunExponent_le_60 (listSize : PySSize)
   rw [Nat.div_eq_of_lt hlt] at hleast
   omega
 
+/-! ## Width-independent output range -/
+
+/-- For a positive admitted list, the initialized modulus does not exceed the
+list length.  This uses only the exponent search, not the mask. -/
+theorem minrunInit_modulus_le_listSize
+    (listSize : PySSize) (hNonnegative : listSize.Nonnegative)
+    (hMax : listSize.toNat ≤ PY_LIST_MAX) (hPositive : 0 < listSize.toNat) :
+    2 ^ (minrunInit listSize).mr_e.toNat ≤ listSize.toNat := by
+  let out := minrunExponentSpecLoop 64 listSize.toNat 0
+  have hinit := minrunInit_exponent_eq_spec listSize hNonnegative
+  have hcharacterization :=
+    minrunExponentCharacterization listSize hNonnegative hMax
+  change 2 ^ (minrunInit listSize).mr_e.toNat ≤ listSize.toNat
+  rw [hinit.1]
+  by_cases hzero : out.1 = 0
+  · rw [hzero]
+    exact hPositive
+  · obtain ⟨exponent, hexponent⟩ := Nat.exists_eq_succ_of_ne_zero hzero
+    change 2 ^ out.1 ≤ listSize.toNat
+    dsimp only at hcharacterization
+    rw [hexponent] at hcharacterization ⊢
+    have hprevious :
+        64 ≤ listSize.toNat / 2 ^ exponent := by
+      exact hcharacterization.2.2.2 exponent (by omega)
+    have hpowPositive : 0 < 2 ^ exponent := by positivity
+    have hscaled : 64 * 2 ^ exponent ≤ listSize.toNat :=
+      (Nat.le_div_iff_mul_le hpowPositive).mp hprevious
+    rw [pow_succ]
+    omega
+
+/-- The initialized 32-bit transcription mask is below the selected mathematical
+modulus, including when `mr_e` is too large for exact mask equivalence. -/
+theorem minrunInit_mask_lt_modulus
+    (listSize : PySSize) (hNonnegative : listSize.Nonnegative)
+    (hMax : listSize.toNat ≤ PY_LIST_MAX) :
+    (minrunInit listSize).mr_mask.toNat <
+      2 ^ (minrunInit listSize).mr_e.toNat := by
+  simp only [minrunInit, minrunInitTraced]
+  rw [minrunExponentLoop_eq_spec 64 listSize 0 hNonnegative]
+  have hbound := minrunExponent_lt_64 listSize hNonnegative hMax
+  have hlt : (minrunExponentSpecLoop 64 listSize.toNat 0).1 < 2 ^ 64 := by
+    norm_num at hbound ⊢
+    omega
+  rw [BitVec.toNat_ofNat, Nat.mod_eq_of_lt hlt]
+  exact cIntMinrunMask_toNat_lt_pow _
+
+/-- Width-independent facts preserved by every adaptive-minrun call. -/
+private structure MinrunRangeInv (state : MinrunState) : Prop where
+  listMax : state.listlen.toNat ≤ PY_LIST_MAX
+  exponent60 : state.mr_e.toNat ≤ 60
+  current : state.mr_current.toNat < 2 ^ state.mr_e.toNat
+  mask : state.mr_mask.toNat < 2 ^ state.mr_e.toNat
+  modulusLe : 2 ^ state.mr_e.toNat ≤ state.listlen.toNat
+  floorLt : state.listlen.toNat / 2 ^ state.mr_e.toNat < 64
+
+/-- One adaptive-minrun call passes its assertion, returns a target in the
+public `1 .. MAX_MINRUN` band, and preserves the bounded-current fact. -/
+private theorem minrunNext_range (state : MinrunState)
+    (h : MinrunRangeInv state) :
+    (minrunNext state).assertionPassed = true ∧
+      1 ≤ (minrunNext state).result.toNat ∧
+      (minrunNext state).result.toNat ≤ MAX_MINRUN.toNat ∧
+      (minrunNext state).state.mr_current.toNat < 2 ^ state.mr_e.toNat := by
+  let total : PySSize := state.mr_current + state.listlen
+  have hpowLe : 2 ^ state.mr_e.toNat ≤ 2 ^ 60 :=
+    Nat.pow_le_pow_right (by omega) h.exponent60
+  have hcurrent := h.current
+  have hmodulusLe := h.modulusLe
+  have hfloorLt := h.floorLt
+  have hlistMax := h.listMax
+  rw [pyListMax_eq] at hlistMax
+  have htotal64 : state.mr_current.toNat + state.listlen.toNat < 2 ^ 64 := by
+    norm_num at hpowLe hlistMax ⊢
+    omega
+  have htotal63 : state.mr_current.toNat + state.listlen.toNat < 2 ^ 63 := by
+    norm_num at hpowLe hlistMax ⊢
+    omega
+  have htotalNat : total.toNat =
+      state.mr_current.toNat + state.listlen.toNat :=
+    BitVec.toNat_add_of_lt htotal64
+  have htotalMsb : total.msb = false := by
+    rw [BitVec.msb_eq_false_iff_two_mul_lt, htotalNat]
+    norm_num at htotal63 ⊢
+    omega
+  have hresult : (minrunNext state).result.toNat =
+      (state.mr_current.toNat + state.listlen.toNat) /
+        2 ^ state.mr_e.toNat := by
+    simp only [minrunNext, total,
+      BitVec.toNat_sshiftRight_of_msb_false htotalMsb,
+      htotalNat, Nat.shiftRight_eq_div_pow]
+  have hpowPositive : 0 < 2 ^ state.mr_e.toNat := by positivity
+  have hpositive : 1 ≤ (minrunNext state).result.toNat := by
+    rw [hresult]
+    apply (Nat.le_div_iff_mul_le hpowPositive).2
+    simp only [one_mul]
+    omega
+  have hlistLt : state.listlen.toNat < 64 * 2 ^ state.mr_e.toNat :=
+    (Nat.div_lt_iff_lt_mul hpowPositive).mp hfloorLt
+  have hupper : (minrunNext state).result.toNat ≤ MAX_MINRUN.toNat := by
+    have hresultLt : (minrunNext state).result.toNat < 65 := by
+      rw [hresult]
+      apply (Nat.div_lt_iff_lt_mul hpowPositive).2
+      omega
+    have hmaxMinrun : MAX_MINRUN.toNat = 64 := by decide
+    rw [hmaxMinrun]
+    omega
+  have hnextCurrent :
+      (minrunNext state).state.mr_current.toNat < 2 ^ state.mr_e.toNat := by
+    simp only [minrunNext]
+    rw [BitVec.toNat_and]
+    exact Nat.and_lt_two_pow _ h.mask
+  exact ⟨by simp [minrunNext, total, htotalMsb], hpositive, hupper,
+    hnextCurrent⟩
+
+private theorem MinrunRangeInv.next
+    {state : MinrunState} (h : MinrunRangeInv state) :
+    MinrunRangeInv (minrunNext state).state := by
+  have hstep := minrunNext_range state h
+  constructor
+  · simpa [minrunNext] using h.listMax
+  · simpa [minrunNext] using h.exponent60
+  · simpa [minrunNext] using hstep.2.2.2
+  · simpa [minrunNext] using h.mask
+  · simpa [minrunNext] using h.modulusLe
+  · simpa [minrunNext] using h.floorLt
+
+private theorem minrunInit_rangeInv
+    (listSize : PySSize) (hNonnegative : listSize.Nonnegative)
+    (hMax : listSize.toNat ≤ PY_LIST_MAX) (hPositive : 0 < listSize.toNat) :
+    MinrunRangeInv (minrunInit listSize) := by
+  have hinit := minrunInit_exponent_eq_spec listSize hNonnegative
+  have hcharacterization :=
+    minrunExponentCharacterization listSize hNonnegative hMax
+  constructor
+  · simpa [minrunInit, minrunInitTraced] using hMax
+  · rw [hinit.1]
+    exact minrunExponent_le_60 listSize hNonnegative hMax
+  · rw [hinit.2.1]
+    simp
+  · exact minrunInit_mask_lt_modulus listSize hNonnegative hMax
+  · exact minrunInit_modulus_le_listSize listSize hNonnegative hMax hPositive
+  · rw [hinit.1]
+    exact hcharacterization.2.2.1
+
+/-- Iteration preserves the private range invariant and records the band for
+every emitted target. -/
+private theorem minrunNextN_range
+    (calls : Nat) (state : MinrunState) (h : MinrunRangeInv state) :
+    let run := minrunNextN calls state
+    MinrunRangeInv run.state ∧
+      run.assertionsPassed = true ∧
+      ∀ target ∈ run.outputs,
+        1 ≤ target ∧ target ≤ MAX_MINRUN.toNat := by
+  induction calls generalizing state with
+  | zero =>
+      simp only [minrunNextN]
+      exact ⟨h, trivial, by simp⟩
+  | succ calls ih =>
+      let next := minrunNext state
+      have hstep := minrunNext_range state h
+      have htail := ih next.state h.next
+      dsimp only at htail
+      rcases htail with ⟨htailInv, htailAssertions, htailBounds⟩
+      simp only [minrunNextN]
+      refine ⟨htailInv, ?_, ?_⟩
+      · simp [next, hstep.1, htailAssertions]
+      · intro target htarget
+        simp only [List.mem_cons] at htarget
+        rcases htarget with rfl | htarget
+        · exact ⟨hstep.2.1, hstep.2.2.1⟩
+        · exact htailBounds target htarget
+
+/-- Arbitrarily many calls from `merge_init` pass every signed-overflow
+assertion and emit only targets in `1 .. 64`.
+This theorem does not use exact quotient/remainder mask equivalence. -/
+theorem minrunNextN_output_bounds
+    (listSize : PySSize) (hNonnegative : listSize.Nonnegative)
+    (hMax : listSize.toNat ≤ PY_LIST_MAX) (hPositive : 0 < listSize.toNat)
+    (calls : Nat) :
+    let run := minrunNextN calls (minrunInit listSize)
+    run.assertionsPassed = true ∧
+      ∀ target ∈ run.outputs,
+        1 ≤ target ∧ target ≤ MAX_MINRUN.toNat := by
+  have hrun := minrunNextN_range calls (minrunInit listSize)
+    (minrunInit_rangeInv listSize hNonnegative hMax hPositive)
+  exact hrun.2
+
+/-- The next call after any reachable prefix passes its assertion and returns
+a target in the unconditional `1 .. MAX_MINRUN` band. -/
+theorem minrunNext_after_init_bounds
+    (listSize : PySSize) (hNonnegative : listSize.Nonnegative)
+    (hMax : listSize.toNat ≤ PY_LIST_MAX) (hPositive : 0 < listSize.toNat)
+    (calls : Nat) :
+    let state := (minrunNextN calls (minrunInit listSize)).state
+    (minrunNext state).assertionPassed = true ∧
+      1 ≤ (minrunNext state).result.toNat ∧
+      (minrunNext state).result.toNat ≤ MAX_MINRUN.toNat := by
+  have hrun := minrunNextN_range calls (minrunInit listSize)
+    (minrunInit_rangeInv listSize hNonnegative hMax hPositive)
+  dsimp only at hrun ⊢
+  have hstep := minrunNext_range
+    (minrunNextN calls (minrunInit listSize)).state hrun.1
+  exact ⟨hstep.1, hstep.2.1, hstep.2.2.1⟩
+
 /-- Natural-number trace of repeated quotient/remainder generator steps. -/
 structure MinrunSpecTrace where
   outputs : List Nat
@@ -130,6 +334,18 @@ def minrunSpecTrace : Nat → Nat → Nat → Nat → MinrunSpecTrace
       let next := minrunNextSpec listlen current exponent
       let tail := minrunSpecTrace calls listlen exponent next.residual
       { outputs := next.result :: tail.outputs, residual := tail.residual }
+
+/-- At exponent 33 the selected 32-bit transcription mask no longer agrees with the
+ideal full-width mask: the second actual target is 63 rather than 64.  This is
+kernel-checked executable evidence that the width restriction on exact
+equivalence is substantive. -/
+theorem minrun_cIntMask_truncation_regression :
+    let listSize : PySSize := BitVec.ofNat 64 (2 ^ 39 - 2 ^ 32)
+    (minrunInit listSize).mr_e.toNat = 33 ∧
+      (minrunInit listSize).mr_mask.toNat = 2 ^ 32 - 1 ∧
+      (minrunNextN 2 (minrunInit listSize)).outputs = [63, 63] ∧
+      (minrunSpecTrace 2 listSize.toNat 33 0).outputs = [63, 64] := by
+  decide
 
 /-- Prefix sums telescope through the quotient/remainder recurrence. -/
 theorem minrunSpecTrace_prefix (calls listlen exponent current : Nat)
@@ -187,7 +403,7 @@ theorem minrunSpecTrace_prefix (calls listlen exponent current : Nat)
 
 /-- Repeated finite-width calls agree with the exact trace while preserving the C assertion. -/
 theorem minrunNextN_eq_spec (calls : Nat) (state : MinrunState)
-    (hexponent : state.mr_e.toNat < 64)
+    (hexponent : state.mr_e.toNat < 32)
     (hexponent60 : state.mr_e.toNat ≤ 60)
     (hmask : state.mr_mask = ((1 : PySSize) <<< state.mr_e.toNat) - 1)
     (hcurrent : state.mr_current.toNat < 2 ^ state.mr_e.toNat)
@@ -254,6 +470,7 @@ theorem minrunNextN_eq_spec (calls : Nat) (state : MinrunState)
 theorem minrunPrefixSum (listSize : PySSize)
     (hlistSize : listSize.Nonnegative)
     (hmax : listSize.toNat ≤ PY_LIST_MAX)
+    (hexponent32 : (minrunInit listSize).mr_e.toNat < 32)
     (calls : Nat)
     (_hcalls : calls ≤ 2 ^ (minrunInit listSize).mr_e.toNat) :
     let state := minrunInit listSize
@@ -266,13 +483,16 @@ theorem minrunPrefixSum (listSize : PySSize)
       run.assertionsPassed = true := by
   let state := minrunInit listSize
   let exponentResult := minrunExponentSpecLoop 64 listSize.toNat 0
-  have hinit := minrunInit_eq_spec listSize hlistSize
+  have hinitExponent := minrunInit_exponent_eq_spec listSize hlistSize
+  have hspecified32 : exponentResult.1 < 32 := by
+    rw [← hinitExponent.1]
+    exact hexponent32
+  have hinit := minrunInit_eq_spec listSize hlistSize hspecified32
   change state.mr_e.toNat = exponentResult.1 ∧
       state.mr_mask = ((1 : PySSize) <<< exponentResult.1) - 1 ∧
       state.mr_current = 0 ∧ (minrunInitTraced listSize).stopped = exponentResult.2 at hinit
-  have hexponent : state.mr_e.toNat < 64 := by
-    rw [hinit.1]
-    exact minrunExponent_lt_64 listSize hlistSize hmax
+  have hexponent : state.mr_e.toNat < 32 := by
+    exact hexponent32
   have hexponent60 : state.mr_e.toNat ≤ 60 := by
     rw [hinit.1]
     exact minrunExponent_le_60 listSize hlistSize hmax
@@ -422,7 +642,8 @@ theorem minrunSpecTrace_length (calls listlen exponent current : Nat) :
 /-- A complete generator cycle is the balanced floor/ceiling partition of the list length. -/
 theorem minrunSequence (listSize : PySSize)
     (hlistSize : listSize.Nonnegative)
-    (hmax : listSize.toNat ≤ PY_LIST_MAX) :
+    (hmax : listSize.toNat ≤ PY_LIST_MAX)
+    (hexponent32 : (minrunInit listSize).mr_e.toNat < 32) :
     let state := minrunInit listSize
     let modulus := 2 ^ state.mr_e.toNat
     let run := minrunNextN modulus state
@@ -436,7 +657,7 @@ theorem minrunSequence (listSize : PySSize)
   let state := minrunInit listSize
   let modulus := 2 ^ state.mr_e.toNat
   let run := minrunNextN modulus state
-  have hpref := minrunPrefixSum listSize hlistSize hmax modulus (by rfl)
+  have hpref := minrunPrefixSum listSize hlistSize hmax hexponent32 modulus (by rfl)
   change
     run.outputs.sum = (modulus * listSize.toNat) / modulus ∧
       run.state.mr_current.toNat = (modulus * listSize.toNat) % modulus ∧
@@ -444,13 +665,16 @@ theorem minrunSequence (listSize : PySSize)
       run.state.mr_current.toNat + listSize.toNat < 2 ^ 63 ∧
       run.assertionsPassed = true at hpref
   let exponentResult := minrunExponentSpecLoop 64 listSize.toNat 0
-  have hinit := minrunInit_eq_spec listSize hlistSize
+  have hinitExponent := minrunInit_exponent_eq_spec listSize hlistSize
+  have hspecified32 : exponentResult.1 < 32 := by
+    rw [← hinitExponent.1]
+    exact hexponent32
+  have hinit := minrunInit_eq_spec listSize hlistSize hspecified32
   change state.mr_e.toNat = exponentResult.1 ∧
       state.mr_mask = ((1 : PySSize) <<< exponentResult.1) - 1 ∧
       state.mr_current = 0 ∧ (minrunInitTraced listSize).stopped = exponentResult.2 at hinit
-  have hexponent : state.mr_e.toNat < 64 := by
-    rw [hinit.1]
-    exact minrunExponent_lt_64 listSize hlistSize hmax
+  have hexponent : state.mr_e.toNat < 32 := by
+    exact hexponent32
   have hexponent60 : state.mr_e.toNat ≤ 60 := by
     rw [hinit.1]
     exact minrunExponent_le_60 listSize hlistSize hmax

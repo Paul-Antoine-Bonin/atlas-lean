@@ -105,7 +105,7 @@ theorem initialMergeState_package
   have htempLive :
       (mergeInitTemp (κ := κ) (ν := ν) listWord hasKeyfunc).storage.Live := by
     simp [mergeInitTemp, TempStorage.Live]
-  have hstopped := minrunInit_stops_and_shift_valid listWord hnonnegative
+  have hstopped := minrunInit_stops_and_exponent_lt_64 listWord hnonnegative
     hwordMax
   refine
     { exactState := rfl
@@ -213,7 +213,6 @@ structure AdaptiveMinrunScanInvariant
     (listSize : PySSize) (calls scanned : Nat) (state : MinrunState) : Prop where
   listNonnegative : listSize.Nonnegative
   listMax : listSize.toNat ≤ PY_LIST_MAX
-  callsBound : calls ≤ 2 ^ (minrunInit listSize).mr_e.toNat
   stateEq : state = (minrunNextN calls (minrunInit listSize)).state
   emittedLeScanned :
     (minrunNextN calls (minrunInit listSize)).outputs.sum ≤ scanned
@@ -228,101 +227,9 @@ theorem adaptiveMinrunScanInvariant_initial
   constructor
   · exact hNonnegative
   · exact hMax
-  · simp
   · rfl
   · simp [minrunNextN]
   · simp
-
-/-- An active scan cannot already have consumed a complete adaptive-minrun
-cycle: that cycle's emitted targets sum to the whole list. -/
-theorem AdaptiveMinrunScanInvariant.calls_lt_of_active
-    {listSize : PySSize} {calls scanned : Nat} {state : MinrunState}
-    (hInv : AdaptiveMinrunScanInvariant listSize calls scanned state)
-    (hActive : scanned < listSize.toNat) :
-    calls < 2 ^ (minrunInit listSize).mr_e.toNat := by
-  have hsequence := minrunSequence listSize hInv.listNonnegative hInv.listMax
-  let modulus := 2 ^ (minrunInit listSize).mr_e.toNat
-  by_contra hnot
-  have hcallsBound : calls ≤ modulus := by
-    simpa [modulus] using hInv.callsBound
-  have hcalls : calls = modulus := by
-    omega
-  have hsum :
-      (minrunNextN modulus (minrunInit listSize)).outputs.sum =
-        listSize.toNat := hsequence.2.2.1
-  have := hInv.emittedLeScanned
-  rw [hcalls, hsum] at this
-  omega
-
-private theorem initialMinrunModulus_le_listSize
-    (listSize : PySSize) (hNonnegative : listSize.Nonnegative)
-    (hMax : listSize.toNat ≤ PY_LIST_MAX) (hPositive : 0 < listSize.toNat) :
-    2 ^ (minrunInit listSize).mr_e.toNat ≤ listSize.toNat := by
-  let out := minrunExponentSpecLoop 64 listSize.toNat 0
-  have hinit := minrunInit_eq_spec listSize hNonnegative
-  have hcharacterization :=
-    minrunExponentCharacterization listSize hNonnegative hMax
-  change 2 ^ (minrunInit listSize).mr_e.toNat ≤ listSize.toNat
-  rw [hinit.1]
-  by_cases hzero : out.1 = 0
-  · rw [hzero]
-    exact hPositive
-  · obtain ⟨exponent, hexponent⟩ := Nat.exists_eq_succ_of_ne_zero hzero
-    change 2 ^ out.1 ≤ listSize.toNat
-    dsimp only at hcharacterization
-    rw [hexponent] at hcharacterization ⊢
-    have hprevious :
-        64 ≤ listSize.toNat / 2 ^ exponent := by
-      exact hcharacterization.2.2.2 exponent (by omega)
-    have hpowPositive : 0 < 2 ^ exponent := by positivity
-    have hscaled : 64 * 2 ^ exponent ≤ listSize.toNat :=
-      (Nat.le_div_iff_mul_le hpowPositive).mp hprevious
-    rw [pow_succ]
-    omega
-
-private theorem minrunSequence_output_bounds
-    (listSize : PySSize) (hNonnegative : listSize.Nonnegative)
-    (hMax : listSize.toNat ≤ PY_LIST_MAX) (hPositive : 0 < listSize.toNat)
-    {target : Nat}
-    (hTarget : target ∈
-      (minrunNextN (2 ^ (minrunInit listSize).mr_e.toNat)
-        (minrunInit listSize)).outputs) :
-    1 ≤ target ∧ target ≤ MAX_MINRUN.toNat := by
-  let modulus := 2 ^ (minrunInit listSize).mr_e.toNat
-  have hmodulusPositive : 0 < modulus := by positivity
-  have hmodulusLe : modulus ≤ listSize.toNat := by
-    simpa [modulus] using
-      initialMinrunModulus_le_listSize listSize hNonnegative hMax hPositive
-  have hcharacterization :=
-    minrunExponentCharacterization listSize hNonnegative hMax
-  have hinit := minrunInit_eq_spec listSize hNonnegative
-  have hfloorLt : listSize.toNat / modulus < 64 := by
-    dsimp [modulus]
-    rw [hinit.1]
-    exact hcharacterization.2.2.1
-  have hbalanced :=
-    (minrunSequence listSize hNonnegative hMax).2.1 target hTarget
-  have hMaxMinrun : MAX_MINRUN.toNat = 64 := by decide
-  rcases hbalanced with hfloor | hceil
-  · rw [hfloor]
-    constructor
-    · exact (Nat.le_div_iff_mul_le hmodulusPositive).2 (by simpa using hmodulusLe)
-    · have hfloorLt' :
-          listSize.toNat / 2 ^ (minrunInit listSize).mr_e.toNat < 64 := by
-          simpa [modulus] using hfloorLt
-      rw [hMaxMinrun]
-      omega
-  · rw [hceil]
-    constructor
-    · unfold minrunCeilDiv
-      apply (Nat.le_div_iff_mul_le hmodulusPositive).2
-      omega
-    · unfold minrunCeilDiv
-      apply (Nat.div_le_iff_le_mul hmodulusPositive).2
-      have hstrict : listSize.toNat < 64 * modulus :=
-        (Nat.div_lt_iff_lt_mul hmodulusPositive).mp hfloorLt
-      rw [hMaxMinrun]
-      omega
 
 /-- Facts about the next adaptive target on an active valid scan. -/
 structure AdaptiveMinrunStepFacts
@@ -339,15 +246,12 @@ structure AdaptiveMinrunStepFacts
         [(minrunNext state).result.toNat]
 
 /-- The next `minrun_next` call on an active valid scan passes its signed
-assertion and returns an exact target in `1 .. MAX_MINRUN`. -/
+assertion and returns its actual target in `1 .. MAX_MINRUN`. -/
 theorem adaptiveMinrun_step_facts
     {listSize : PySSize} {calls scanned : Nat} {state : MinrunState}
     (hInv : AdaptiveMinrunScanInvariant listSize calls scanned state)
     (hActive : scanned < listSize.toNat) :
     AdaptiveMinrunStepFacts listSize calls scanned state := by
-  have hcalls := hInv.calls_lt_of_active hActive
-  have hcallsNext :
-      calls + 1 ≤ 2 ^ (minrunInit listSize).mr_e.toNat := by omega
   let prior := minrunNextN calls (minrunInit listSize)
   have hstate : state = prior.state := by simpa [prior] using hInv.stateEq
   have hsucc := minrunNextN_succ calls (minrunInit listSize)
@@ -362,42 +266,15 @@ theorem adaptiveMinrun_step_facts
           [(minrunNext state).result.toNat] := by
     rw [hstate]
     exact hsucc.2.1
-  have hprefixAssertions :=
-    (minrunPrefixSum listSize hInv.listNonnegative hInv.listMax
-      (calls + 1) hcallsNext).2.2.2.2
-  have hassertion : (minrunNext state).assertionPassed = true := by
-    rw [hsucc.2.2] at hprefixAssertions
-    rw [← hstate] at hprefixAssertions
-    have hboth := hprefixAssertions
-    simp only [Bool.and_eq_true] at hboth
-    exact hboth.2
-  have hfullComposition := minrunNextN_add (calls + 1)
-    (2 ^ (minrunInit listSize).mr_e.toNat - (calls + 1))
-    (minrunInit listSize)
-  have hsumCalls :
-      calls + 1 +
-          (2 ^ (minrunInit listSize).mr_e.toNat - (calls + 1)) =
-        2 ^ (minrunInit listSize).mr_e.toNat := by omega
-  have htargetPrefix :
-      (minrunNext state).result.toNat ∈
-        (minrunNextN (calls + 1) (minrunInit listSize)).outputs := by
-    rw [houtputs]
-    simp
-  have htargetFull :
-      (minrunNext state).result.toNat ∈
-        (minrunNextN (2 ^ (minrunInit listSize).mr_e.toNat)
-          (minrunInit listSize)).outputs := by
-    have hcompositionOutputs := hfullComposition.2.1
-    rw [hsumCalls] at hcompositionOutputs
-    rw [hcompositionOutputs]
-    exact List.mem_append_left _ htargetPrefix
   have hpositive : 0 < listSize.toNat := by omega
-  have hbounds := minrunSequence_output_bounds listSize hInv.listNonnegative
-    hInv.listMax hpositive htargetFull
+  have hbounds := minrunNext_after_init_bounds listSize hInv.listNonnegative
+    hInv.listMax hpositive calls
+  dsimp only at hbounds
+  rw [← hstate] at hbounds
   exact
-    { assertionPassed := hassertion
-      targetPositive := hbounds.1
-      targetMax := hbounds.2
+    { assertionPassed := hbounds.1
+      targetPositive := hbounds.2.1
+      targetMax := hbounds.2.2
       nextState := hnextState
       emittedOutputs := houtputs }
 
@@ -412,11 +289,9 @@ theorem AdaptiveMinrunScanInvariant.advance
     AdaptiveMinrunScanInvariant listSize (calls + 1) (scanned + consumed)
       (minrunNext state).state := by
   have hstep := adaptiveMinrun_step_facts hInv hActive
-  have hcalls := hInv.calls_lt_of_active hActive
   refine
     { listNonnegative := hInv.listNonnegative
       listMax := hInv.listMax
-      callsBound := by omega
       stateEq := hstep.nextState
       emittedLeScanned := ?_
       scannedBound := hNextScanned }

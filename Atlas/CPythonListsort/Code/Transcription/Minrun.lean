@@ -44,7 +44,9 @@ def minrunInitTraced (listSize : PySSize) : MinrunInitTrace :=
       { listlen := listSize
         mr_current := 0
         mr_e := exponent
-        mr_mask := (1 <<< exponentResult.1) - 1 }
+        -- C's unsuffixed literal makes this an `int` expression; the selected
+        -- platform fixes `int` at 32 bits and records that bit pattern here.
+        mr_mask := ((((1 : BitVec 32) <<< exponentResult.1) - 1).zeroExtend 64) }
     stopped := exponentResult.2 }
 
 /-- The adaptive-minrun fields produced by the transcribed `merge_init` fragment. -/

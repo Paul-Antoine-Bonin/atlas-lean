@@ -17,6 +17,25 @@ pointers. CPython's list-allocation guard limits the pointer array to
 This is the source-backed slack that keeps `powerloop` midpoint arithmetic and
 left shifts inside nonnegative signed `Py_ssize_t`.
 
+One expression inside the 64-bit `MergeState` has a narrower source type:
+the unsuffixed literal in `mr_mask = (1 << mr_e) - 1` makes the shift and
+subtraction have C type `int`. The selected v1 platform additionally fixes
+`int` at 32 bits. The transcription therefore evaluates that mask in
+`BitVec 32` and zero-extends the resulting bit pattern into the 64-bit field.
+Exact correspondence with CPython's arbitrary-precision design
+note is exposed only under `mr_e < 32`; for larger selected exponents, the
+top-level chains consume the separate theorem that every emitted target lies
+in `1 .. MAX_MINRUN` instead of assuming an exact quotient/remainder cycle.
+
+This word-level choice is not a claim about portable ISO C behavior. Signed
+`1 << 31` is not representable as a positive 32-bit `int`, and shift counts at
+least 32 are outside the operand width, so the source standard does not define
+all executions admitted by the model's much larger list bound. The selected
+zero-extended bit-vector behavior makes that boundary explicit. Compiler and
+runtime behavior below C remain outside version one, and the public safety,
+correctness, depth, and merge-cost conclusions do not depend on exact
+high-exponent cycle equivalence.
+
 The input-domain premise does not model allocation failure: it says the input
 snapshot already exists and has a length that a selected-platform CPython list
 can represent. Allocation attempts and their failure behavior remain outside

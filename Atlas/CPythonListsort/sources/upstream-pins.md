@@ -14,13 +14,22 @@ project.
 The branch name chose the snapshot only. All downloads, citations, line ranges,
 and verification use the full commit rather than the moving branch.
 
+## Development formalization
+
+- Repository: [`neelsomani/cpython-listsort-lean`](https://github.com/neelsomani/cpython-listsort-lean)
+- Exported commit:
+  [`7a5f47de2501d41980fafa0a363c61c2a2fa688c`](https://github.com/neelsomani/cpython-listsort-lean/commit/7a5f47de2501d41980fafa0a363c61c2a2fa688c)
+
+The Lean sources, source notes, and roadmap in this entry are an export of that
+merged development-repository snapshot, with module imports rewritten from
+`CPythonListsort.*` to `Code.*`; declaration namespaces are unchanged.
+
 ## Munro-Wild paper
 
 - J. Ian Munro and Sebastian Wild, *Nearly-Optimal Mergesorts: Fast,
   Practical Sorting Methods That Optimally Adapt to Existing Runs*
 - arXiv: [`1805.04154v1`](https://arxiv.org/abs/1805.04154v1), 10 May 2018
-- Development-repository PDF:
-  [munro-wild-powersort.pdf](https://github.com/neelsomani/cpython-listsort-lean/blob/f6b0683ab871f8c6ce3b2c4de93ff49010e68afe/blueprint/sources/munro-wild-powersort.pdf)
+- Local pinned PDF: [munro-wild-powersort.pdf](munro-wild-powersort.pdf)
 - SHA-256: `edf79f9d25bb654edcc631b0b7883e0a37140a3674556f16382fab100ddeb54b`
 
 ## Tooling
