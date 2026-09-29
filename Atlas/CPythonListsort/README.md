@@ -138,6 +138,16 @@ concern the Lean model.  Its correspondence to the pinned C is supported by
 machine-verified source excerpts and human-reviewed transcription, not by a
 machine-checked C-refinement proof.
 
+**Key storage for short keyed sorts.** The model keeps the list being sorted
+and the merge scratch storage in two separate stores. In C, a keyed sort of
+fewer than 128 elements places its keys array inside `ms.temparray` (at
+`&ms.temparray[saved_ob_size + 1]`), the same stack buffer that `merge_init`
+uses as inline scratch storage. The scratch region occupies the first
+`2 * ms.alloced <= saved_ob_size + 1` slots, so the two regions do not overlap,
+but this layout fact is not proved in Lean. The memcpy provenance and
+inline-capacity results hold for the model's separated stores; they do not by
+themselves establish non-overlap within `temparray`.
+
 The unsuffixed literal in `merge_init` makes its minrun-mask expression have
 type `int`; the selected v1 platform fixes `int` at 32 bits and zero-extends
 that bit pattern into the 64-bit stored word.  This is a project convention,
