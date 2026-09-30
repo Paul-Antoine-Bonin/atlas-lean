@@ -1,0 +1,25 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+import Code.FrontierD.SixVertexMarkedPairCTypeHall
+
+open StatMech.FrontierD
+
+#print axioms exists_injective_equalTotalC_of_fiberDominates
+#print axioms exists_injective_gradePreserving_iff_fiberCard
+#print axioms exists_injective_bigradePreserving_iff_fiberCard
+#print axioms card_sixVertexMarkedDecoratedPairTotalCFiber
+#print axioms decoratedTotalCFiberDominates_of_configurationPair
+#print axioms configurationPairTotalCReconnection_iff_fiberDominates
+#print axioms sixVertexMarkedDecoratedPairHall_equalTotalC_of_fiberDominates
+#print axioms sixVertexMarkedDecoratedPairHall_equalTotalC_of_configurationPair
+#print axioms sixVertexMarkedDecoratedPairHall_equalTotalC_iff_fiberDominates
+#print axioms sixVertexMarkedTraceCoefficientwiseLogConcave_of_totalCFibers
+#print axioms sixVertexMarkedTraceCoefficientwiseLogConcave_of_totalCReconnection
+#print axioms sixVertexSectorTrace_logConcave_of_totalCFibers
+#print axioms sixVertexFourByTwo_reconnection_equalTotalC

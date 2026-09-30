@@ -1,0 +1,20 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+import Code.Universality.IsingFermionicEndpointInputAssembly
+
+set_option linter.style.longLine false
+
+#print axioms StatMech.Universality.FKIsingSquareBoundaryLayerCoordinateOneForm.PhysicalEndpointFourthOrderBulkData.vertexLaplacian
+#print axioms StatMech.Universality.FKIsingSquareBoundaryLayerCoordinateOneForm.PhysicalEndpointFourthOrderBulkData.faceLaplacian
+#print axioms StatMech.Universality.FKIsingSquareBoundaryLayerCoordinateOneForm.PhysicalEndpointLocalizedRobinInputs.ofLocalizedFourthOrderAndRange
+#print axioms StatMech.Universality.FKIsingSquareBoundaryLayerCoordinateOneForm.PhysicalEndpointLayerIncrementData.vertexLaplacian
+#print axioms StatMech.Universality.FKIsingSquareBoundaryLayerCoordinateOneForm.PhysicalEndpointLayerIncrementData.faceLaplacian
+#print axioms StatMech.Universality.FKIsingSquareBoundaryLayerCoordinateOneForm.PhysicalEndpointLayerIncrementData.ofLipschitzOn
+#print axioms StatMech.Universality.FKIsingSquareBoundaryLayerCoordinateOneForm.PhysicalEndpointLayerIncrementData.ofFDerivBoundOnConvex
+#print axioms StatMech.Universality.FKIsingSquareBoundaryLayerCoordinateOneForm.PhysicalEndpointLocalizedRobinInputs.ofLocalizedFourthOrderLayerAndRange

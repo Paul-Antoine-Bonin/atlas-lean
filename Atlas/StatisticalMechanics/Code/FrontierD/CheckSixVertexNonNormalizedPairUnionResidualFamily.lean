@@ -1,0 +1,23 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+import Code.FrontierD.SixVertexNonNormalizedPairUnionResidualFamily
+
+namespace StatMech.FrontierD
+
+#print axioms SixVertexNonNormalizedUnitChargeResidualSources.unitCharge
+#print axioms SixVertexNonNormalizedPairUnionPhysicalTargetFamily.surplusTarget_physical
+#print axioms SixVertexNonNormalizedPairUnionPhysicalTargetFamily.surplusEmbedding
+#print axioms SixVertexNonNormalizedPairUnionPhysicalTargetFamily.decode_surplusTarget
+#print axioms SixVertexNonNormalizedPairUnionPhysicalTargetFamily.surplusTarget_supported
+#print axioms SixVertexNonNormalizedPairUnionPhysicalTargetFamily.surplusTarget_joint_injective
+#print axioms SixVertexNonNormalizedPairUnionPhysicalTargetFamily.surplusTarget_branch_injective
+#print axioms SixVertexNonNormalizedPairUnionPhysicalTargetFamily.surplusTarget_branches_disjoint
+#print axioms SixVertexNonNormalizedPairUnionPhysicalTargetFamily.geometricRepair
+
+end StatMech.FrontierD

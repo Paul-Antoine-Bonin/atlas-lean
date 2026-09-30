@@ -1,0 +1,24 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+import Code.FrontierD.SixVertexDegreeTwoHighChargeLoopHallRouting
+
+#print axioms StatMech.FrontierD.sixVertexHorizontalDegreeTwoLoopRoutedTarget
+#print axioms StatMech.FrontierD.sixVertexHorizontalDegreeTwoLoopHighChargeComponent_charge
+#print axioms StatMech.FrontierD.sixVertexDegreeTwoAlignedRoutedKey.rebaseToLoopDecoration
+#print axioms StatMech.FrontierD.sixVertexDegreeTwoAlignedRoutedKey.rebaseToLoopDecoration_target
+#print axioms StatMech.FrontierD.sixVertexHorizontalDegreeTwoLoopRoutedTarget_supported
+#print axioms StatMech.FrontierD.SixVertexHorizontalDegreeTwoLoopSynchronizedPairedTargets.routedKey_target
+#print axioms StatMech.FrontierD.SixVertexHorizontalDegreeTwoLoopSynchronizedPairedTargets.routedTarget_distinct
+#print axioms StatMech.FrontierD.SixVertexHorizontalDegreeTwoLoopSynchronizedPairedTargets.routedTarget_injective
+#print axioms StatMech.FrontierD.SixVertexHorizontalDegreeTwoLoopRoutedReconnection.pairedInverseCode
+#print axioms StatMech.FrontierD.SixVertexHorizontalDegreeTwoLoopRoutedReconnection.paired_hall
+#print axioms StatMech.FrontierD.SixVertexHorizontalDegreeTwoLoopRoutedReconnection.reconnect_supported
+#print axioms StatMech.FrontierD.SixVertexHorizontalDegreeTwoLoopRoutedReconnection.reconnectEmbedding
+#print axioms StatMech.FrontierD.loopBigradeFibers_of_degreeTwoLoopRoutedReconnections
+#print axioms StatMech.FrontierD.sixVertexMarkedTraceCoefficientwiseLogConcave_of_degreeTwoLoopRoutedReconnections

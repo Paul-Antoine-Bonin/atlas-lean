@@ -1,0 +1,25 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+import Code.FrontierD.SixVertexPositiveUnitComponentOrbit
+
+#print axioms StatMech.FrontierD.SixVertexPositiveUnitComponentOrbitBase.mask_seamTransfer
+#print axioms StatMech.FrontierD.SixVertexPositiveUnitComponentOrbitBase.mask_injective
+#print axioms StatMech.FrontierD.SixVertexPositiveUnitComponentOrbitBase.sourceEmbedding
+#print axioms StatMech.FrontierD.SixVertexPositiveUnitComponentOrbitBase.targetEmbedding
+#print axioms StatMech.FrontierD.SixVertexPositiveUnitComponentOrbitBase.physicalRelated_of_related
+#print axioms StatMech.FrontierD.SixVertexPositiveUnitComponentOrbitBase.related_of_physicalRelated
+#print axioms StatMech.FrontierD.SixVertexPositiveUnitComponentOrbitBase.physicalRelated_iff
+#print axioms StatMech.FrontierD.SixVertexPositiveUnitComponentOrbitBase.presentation
+#print axioms StatMech.FrontierD.SixVertexPositiveUnitComponentOrbitBase.hall
+#print axioms StatMech.FrontierD.SixVertexPositiveUnitComponentOrbitCover.toAtlas
+#print axioms StatMech.FrontierD.SixVertexPositiveUnitComponentOrbitCover.matching_related
+#print axioms StatMech.FrontierD.SixVertexPositiveUnitComponentOrbitCover.matching_fineRelated
+#print axioms StatMech.FrontierD.SixVertexPositiveUnitComponentOrbitCover.matching_layers_ne
+#print axioms StatMech.FrontierD.SixVertexPositiveUnitComponentOrbitCover.matching_totalC
+#print axioms StatMech.FrontierD.SixVertexPositiveUnitComponentOrbitCover.hall

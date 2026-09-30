@@ -1,0 +1,28 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+import Code.FrontierD.FKRectZeroTurnDevelopedAnchor
+
+#print axioms StatMech.FrontierD.fkRectBlackBoundaryPrimalCycleWalk_winding_eq_cycleClass
+#print axioms StatMech.FrontierD.fkRectMedialBoundaryPrimalOrbitWalk_winding_ne_zero_of_componentTurn_eq_zero
+#print axioms StatMech.FrontierD.fkRectClosedOpenWalk_verticalWinding_eq_zero_of_remainder
+#print axioms StatMech.FrontierD.not_fkRectHasNet_of_zeroTurnRemainder
+#print axioms StatMech.FrontierD.fkRectMedialBoundaryPrimalOrbitWalk_verticalWinding_eq_zero_of_remainder
+#print axioms StatMech.FrontierD.fkRectBlackBoundaryPrimalCycleWalk_verticalWinding_eq_zero_of_remainder
+#print axioms StatMech.FrontierD.fkRectZeroTurnRemainderOrientedDart_checkerColor
+#print axioms StatMech.FrontierD.fkRectZeroTurnRemainderOrientedDart_component
+#print axioms StatMech.FrontierD.fkRectZeroTurnRemainderOrientedDart_winding_fst_pos_iff
+#print axioms StatMech.FrontierD.fkRectZeroTurnRemainderOrientedDart_winding_fst_neg_iff
+#print axioms StatMech.FrontierD.fkRectRawPrimalCrossingDevelopedHeight_sub_eq_walk
+#print axioms StatMech.FrontierD.fkRectRawPrimalCrossingTopClosing_verticalWinding_neg
+#print axioms StatMech.FrontierD.fkRectRawPrimalCrossingBottomClosing_verticalWinding_pos
+#print axioms StatMech.FrontierD.fkRectRawPrimalCrossingBottomEdge_closed
+#print axioms StatMech.FrontierD.fkRectRawPrimalCrossingTopEdge_closed
+#print axioms StatMech.FrontierD.fkRectRawPrimalCrossingDevelopedExtremeDart_primalComponent
+#print axioms StatMech.FrontierD.fkRectRawPrimalCrossingDevelopedExtremeDart_matches_component
+#print axioms StatMech.FrontierD.fkRectZeroTurnRemainder_eq_of_shared_primalTouchedCrossing
