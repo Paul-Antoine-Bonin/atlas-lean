@@ -10,12 +10,12 @@ import Mathlib.Probability.Moments.CovarianceBilin
 import Mathlib.MeasureTheory.Measure.LevyConvergence
 
 /-!
-# CDIS Probabilités IV: bridge statements (V3 sample)
+# CDIS Probabilités IV: bridge statements
 
 * id 62: Markov's inequality `P(|X| ≥ a) ≤ E(|X|^p) / a^p`. The course states it for `a ∈ ℝ*`,
   which is false for `a < 0` (see `not_markov_of_neg`); the correct hypothesis is `a > 0`.
-* id 63: the course's Chebyshev inequality does not quantify `a`; `not_chebyshev_of_neg`
-  shows it fails for `a < 0`.
+* id 63: Bienaymé-Chebyshev `P(|X - E X| > a) ≤ Var(X) / a²`. The course does not quantify `a`;
+  `not_chebyshev_of_neg` shows it fails for `a < 0`, and `chebyshev_abs_sub` proves it for `a > 0`.
 * id 74: strong law of large numbers, almost sure and `L¹` convergence.
 * id 79: central limit theorem in the course's normalisation `(S_n - n m) / (σ √n) → N(0,1)`.
 * id 89: characteristic function of a Gaussian vector, with mean vector and covariance.
@@ -54,6 +54,16 @@ theorem not_markov_of_neg :
   intro h
   have := h 1 (-1) (fun _ ↦ 0) le_rfl (by norm_num) (memLp_const 0)
   norm_num at this
+
+/-- CDIS P.IV, id 63 (Bienaymé-Chebyshev inequality), with the hypothesis `0 < a` that the
+course leaves out. -/
+theorem chebyshev_abs_sub {X : Ω → ℝ} (hX : MemLp X 2 P) {a : ℝ} (ha : 0 < a) :
+    P.real {ω | a < |X ω - ∫ ω', X ω' ∂P|} ≤ Var[X; P] / a ^ 2 := by
+  calc P.real {ω | a < |X ω - ∫ ω', X ω' ∂P|}
+      ≤ P.real {ω | a ≤ |X ω - ∫ ω', X ω' ∂P|} :=
+        measureReal_mono fun _ (hω : a < _) ↦ (le_of_lt hω : a ≤ _)
+    _ ≤ Var[X; P] / a ^ 2 := ENNReal.toReal_le_of_le_ofReal
+        (div_nonneg (variance_nonneg _ _) (sq_nonneg _)) (meas_ge_le_variance_div_sq hX ha)
 
 /-- CDIS P.IV, id 63: the course states Bienaymé-Chebyshev `P(|X - E X| > a) ≤ Var(X) / a²`
 without quantifying `a`; it is false for `a < 0` (take `X = 0`, `a = -1`). -/

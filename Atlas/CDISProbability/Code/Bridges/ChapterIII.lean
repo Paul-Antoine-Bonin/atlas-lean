@@ -6,7 +6,7 @@ Authors: Paul-Antoine Bonin
 import Mathlib.Probability.Kernel.CondDistrib
 
 /-!
-# CDIS Probabilités III: bridge statement (V3 sample)
+# CDIS Probabilités III: bridge statement
 
 * id 53 (conditional Fubini theorem). For a pair `(X, Y)` of real random variables there is a
   family of probabilities `P_{Y | X = x}` with

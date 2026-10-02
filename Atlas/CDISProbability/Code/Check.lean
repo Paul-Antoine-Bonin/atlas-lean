@@ -5,11 +5,11 @@ Authors: Paul-Antoine Bonin
 -/
 import Mathlib
 /-!
-# V2: every Mathlib declaration claimed as a bridge exists
+# Mathlib declarations used by the roadmap
 
-One `example := @decl` per declaration named in `targets_annotes.yaml` (ids in comments).
-Built as part of `lake build`, so a renamed or removed declaration breaks the build.
-Two names from the original brief were wrong and are fixed here (ids 24 and 42).
+One `example := @decl` for every `mathlib_declaration` field of the roadmap, and for the other
+Mathlib declarations the course statements correspond to (CDIS ids in comments). Built as part
+of `lake build`, so a renamed or removed declaration breaks the build.
 -/
 open MeasureTheory ProbabilityTheory Filter Topology
 
@@ -25,8 +25,8 @@ noncomputable example := @measure_iUnion_le                            -- 7
 noncomputable example := @ProbabilityTheory.cond                       -- 8
 noncomputable example := @cond_isProbabilityMeasure                    -- 9
 noncomputable example := @cond_mul_eq_inter                            -- 9
-noncomputable example := @cond_add_cond_compl_eq                       -- 10 (partiel)
-noncomputable example := @cond_eq_inv_mul_cond_mul                     -- 11 (partiel)
+noncomputable example := @cond_add_cond_compl_eq                       -- 10 (partial)
+noncomputable example := @cond_eq_inv_mul_cond_mul                     -- 11 (partial)
 noncomputable example := @IndepSet                                     -- 12
 noncomputable example := @iIndepSet                                    -- 14
 noncomputable example := @MeasurableSpace.map                          -- 15
@@ -41,7 +41,7 @@ noncomputable example := @Measurable.add                               -- 22
 noncomputable example := @Measurable.mul                               -- 22
 noncomputable example := @measurable_of_tendsto_metrizable             -- 22
 noncomputable example := @ProbabilityTheory.cdf                        -- 23
-noncomputable example := @Measure.eq_of_cdf                            -- 24 (brief had ext_of_cdf)
+noncomputable example := @Measure.eq_of_cdf                            -- 24
 noncomputable example := @StieltjesFunction.measure                    -- 25
 noncomputable example := @cdf_measure_stieltjesFunction                -- 25
 noncomputable example := @HasPDF                                       -- 27, 36
@@ -54,10 +54,10 @@ noncomputable example := @MemLp.mono_exponent                          -- 32, 61
 noncomputable example := @ProbabilityTheory.covariance                 -- 33
 noncomputable example := @integral_mul_le_Lp_mul_Lq_of_nonneg          -- 34
 noncomputable example := @integral_map                                 -- 35, 37, 48
-noncomputable example := @covarianceBilin                              -- 39 (partiel)
-noncomputable example := @isPosSemidef_covarianceBilin                 -- 40 (partiel)
+noncomputable example := @covarianceBilin                              -- 39 (partial)
+noncomputable example := @isPosSemidef_covarianceBilin                 -- 40 (partial)
 noncomputable example := @IndepFun                                     -- 41
-noncomputable example := @pdf.indepFun_iff_pdf_prod_eq_pdf_mul_pdf     -- 42 (brief omitted pdf.)
+noncomputable example := @pdf.indepFun_iff_pdf_prod_eq_pdf_mul_pdf     -- 42
 noncomputable example := @IndepFun.comp                                -- 43
 noncomputable example := @IndepFun.covariance_eq_zero                  -- 44
 -- P.III

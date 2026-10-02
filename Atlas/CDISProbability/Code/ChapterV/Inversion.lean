@@ -5,6 +5,7 @@ Authors: Paul-Antoine Bonin
 -/
 import Mathlib.Probability.CDF
 import Mathlib.Probability.HasLaw
+import Mathlib.Probability.Distributions.Exponential
 
 /-!
 # CDIS Probabilités V: the inversion method
@@ -183,39 +184,47 @@ end Inversion
 section Bijective
 
 variable {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω} [IsProbabilityMeasure P]
-  {μ : Measure ℝ} [IsProbabilityMeasure μ] {a b : ℝ} {G : ℝ → ℝ}
+  {μ : Measure ℝ} [IsProbabilityMeasure μ] {I : Set ℝ} {G : ℝ → ℝ}
 
-/-- Hypotheses of id 92: `F` maps `]a,b[` bijectively onto `]0,1[`, with inverse `G`. -/
-structure IsCdfBijection (F : ℝ → ℝ) (a b : ℝ) (G : ℝ → ℝ) : Prop where
-  lt : a < b
-  mapsTo : MapsTo F (Ioo a b) (Ioo 0 1)
-  mapsTo_inv : MapsTo G (Ioo 0 1) (Ioo a b)
-  left_inv : ∀ x ∈ Ioo a b, G (F x) = x
+/-- Hypotheses of id 92: `F` maps the open set `I` bijectively onto `]0,1[`, with inverse `G`.
+The course takes `I = ]a,b[` with `-∞ ≤ a < b ≤ +∞`; every such interval is open, so this covers
+the bounded case as well as `]0,+∞[` (exponential law) and `ℝ` (Cauchy, Laplace, logistic). -/
+structure IsCdfBijection (F : ℝ → ℝ) (I : Set ℝ) (G : ℝ → ℝ) : Prop where
+  isOpen : IsOpen I
+  mapsTo : MapsTo F I (Ioo 0 1)
+  mapsTo_inv : MapsTo G (Ioo 0 1) I
+  left_inv : ∀ x ∈ I, G (F x) = x
   right_inv : ∀ u ∈ Ioo (0 : ℝ) 1, F (G u) = u
+
+/-- An open set contains an interval `]x - ε, x + ε[` around each of its points. -/
+lemma exists_Ioo_subset_of_isOpen (hI : IsOpen I) {x : ℝ} (hx : x ∈ I) :
+    ∃ ε > 0, Ioo (x - ε) (x + ε) ⊆ I := by
+  obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.1 hI x hx
+  exact ⟨ε, hε, Real.ball_eq_Ioo x ε ▸ hball⟩
 
 omit [IsProbabilityMeasure μ] in
 /-- Under the hypotheses of id 92, `G` agrees with `F⁻` on `]0,1[`. -/
-lemma IsCdfBijection.genInv_eq (h : IsCdfBijection (cdf μ) a b G) {u : ℝ}
+lemma IsCdfBijection.genInv_eq (h : IsCdfBijection (cdf μ) I G) {u : ℝ}
     (hu : u ∈ Ioo (0 : ℝ) 1) : genInv (cdf μ) u = G u := by
   have h0 := tendsto_cdf_atBot μ
   have h1 := tendsto_cdf_atTop μ
-  have hGu := h.mapsTo_inv hu
   refine le_antisymm ((genInv_le_iff h0 h1 hu).2 (h.right_inv u hu).ge) (le_of_not_gt fun hlt ↦ ?_)
-  -- `z` sits strictly between `max(F⁻ u, a)` and `G u`, yet `F z = u = F (G u)`.
-  set z := max (genInv (cdf μ) u) ((a + G u) / 2) with hz
-  have hza : a < z := lt_max_of_lt_right (by linarith [hGu.1])
-  have hzG : z < G u := max_lt hlt (by linarith [hGu.1])
-  have hzab : z ∈ Ioo a b := ⟨hza, hzG.trans hGu.2⟩
+  obtain ⟨ε, hε, hsub⟩ := exists_Ioo_subset_of_isOpen h.isOpen (h.mapsTo_inv hu)
+  -- `z` sits strictly between `max(F⁻ u, G u - ε)` and `G u`, yet `F z = u = F (G u)`.
+  set z := max (genInv (cdf μ) u) (G u - ε / 2) with hz
+  have hzG : z < G u := max_lt hlt (by linarith)
+  have hzI : z ∈ I := hsub ⟨by linarith [le_max_right (genInv (cdf μ) u) (G u - ε / 2)],
+    by linarith⟩
   have hFz : cdf μ z = u := le_antisymm
     ((monotone_cdf μ hzG.le).trans (h.right_inv u hu).le)
     ((le_apply_genInv h1 hu.2).trans (monotone_cdf μ (le_max_left _ _)))
-  have := h.left_inv z hzab
+  have := h.left_inv z hzI
   rw [hFz] at this
   exact hzG.ne this.symm
 
 omit [IsProbabilityMeasure P] in
 /-- CDIS P.V, id 92, first claim: `F⁻¹(U)` has the same law as `X`. -/
-theorem IsCdfBijection.hasLaw_comp {U : Ω → ℝ} (h : IsCdfBijection (cdf μ) a b G)
+theorem IsCdfBijection.hasLaw_comp {U : Ω → ℝ} (h : IsCdfBijection (cdf μ) I G)
     (hU : HasLaw U (volume.restrict (Ioo (0 : ℝ) 1)) P) : HasLaw (fun ω ↦ G (U ω)) μ P := by
   refine (hasLaw_genInv_cdf μ hU).congr ?_
   have hmem : ∀ᵐ ω ∂P, U ω ∈ Ioo (0 : ℝ) 1 := by
@@ -225,52 +234,48 @@ theorem IsCdfBijection.hasLaw_comp {U : Ω → ℝ} (h : IsCdfBijection (cdf μ)
   exact (h.genInv_eq hω).symm
 
 /-- CDIS P.V, id 92, second claim: `F(X)` is uniform on `]0,1[`, in measure form. -/
-theorem IsCdfBijection.map_cdf (h : IsCdfBijection (cdf μ) a b G) :
+theorem IsCdfBijection.map_cdf (h : IsCdfBijection (cdf μ) I G) :
     μ.map (cdf μ) = volume.restrict (Ioo (0 : ℝ) 1) := by
   have hm : Measurable (cdf μ) := (monotone_cdf μ).measurable
   have : IsProbabilityMeasure (volume.restrict (Ioo (0 : ℝ) 1)) := ⟨by simp⟩
   have : IsProbabilityMeasure (μ.map (cdf μ)) :=
     (Measure.isProbabilityMeasure_map_iff hm.aemeasurable).2 ‹_›
-  -- `F(a) = 0`: `F` takes every value of `]0,1[` on `]a,b[`, so it is `≤ ε` just right of `a`.
-  have hFa : cdf μ a ≤ 0 := by
-    refine le_of_forall_pos_le_add fun ε hε ↦ ?_
-    set v := min (ε / 2) (1 / 2) with hv
-    have hv01 : v ∈ Ioo (0 : ℝ) 1 := ⟨by positivity, by linarith [min_le_right (ε / 2) (1 / 2)]⟩
-    have hGv := h.mapsTo_inv hv01
-    calc cdf μ a ≤ cdf μ (G v) := monotone_cdf μ hGv.1.le
-      _ = v := h.right_inv v hv01
-      _ ≤ 0 + ε := by linarith [min_le_left (ε / 2) (1 / 2)]
   refine Measure.ext_of_Iic _ _ fun c ↦ ?_
   rw [Measure.map_apply hm measurableSet_Iic, Measure.restrict_apply measurableSet_Iic,
     inter_comm]
   rcases le_or_gt c 0 with hc0 | hc0
-  · -- both sides vanish: `{F ≤ c} ⊆ ]-∞, a]` and `μ(]-∞, a]) = F(a) = 0`
-    have hsub : cdf μ ⁻¹' Iic c ⊆ Iic a := fun x hx ↦ le_of_not_gt fun hxa ↦ by
-      obtain ⟨y, hy, hyx⟩ : ∃ y ∈ Ioo a b, y ≤ x :=
-        ⟨min x ((a + b) / 2), ⟨lt_min hxa (by linarith [h.lt]), by
-          linarith [min_le_right x ((a + b) / 2), h.lt]⟩, min_le_left _ _⟩
-      exact (h.mapsTo hy).1.not_ge ((monotone_cdf μ hyx).trans (mem_Iic.1 hx |>.trans hc0))
-    have hμa : μ (Iic a) = 0 := by
-      rw [← ofReal_cdf μ a, ENNReal.ofReal_eq_zero]
-      exact hFa
+  · -- both sides vanish: `{F ≤ c}` lies below every `G v`, and `μ(]-∞, G v]) = v` for `v ∈ ]0,1[`
+    have hsub : ∀ v ∈ Ioo (0 : ℝ) 1, cdf μ ⁻¹' Iic c ⊆ Iic (G v) := fun v hv x hx ↦
+      le_of_not_gt fun hlt ↦ (h.mapsTo (h.mapsTo_inv hv)).1.not_ge
+        ((monotone_cdf μ hlt.le).trans ((mem_Iic.1 hx).trans hc0))
+    have hS : μ.real (cdf μ ⁻¹' Iic c) ≤ 0 := by
+      refine le_of_forall_pos_le_add fun ε hε ↦ ?_
+      set v := min (ε / 2) (1 / 2) with hv
+      have hv01 : v ∈ Ioo (0 : ℝ) 1 := ⟨by positivity, by linarith [min_le_right (ε / 2) (1 / 2)]⟩
+      calc μ.real (cdf μ ⁻¹' Iic c) ≤ μ.real (Iic (G v)) := measureReal_mono (hsub v hv01)
+        _ = v := by
+          rw [measureReal_def, ← ofReal_cdf, h.right_inv v hv01, ENNReal.toReal_ofReal hv01.1.le]
+        _ ≤ 0 + ε := by linarith [min_le_left (ε / 2) (1 / 2)]
+    have hμ : μ (cdf μ ⁻¹' Iic c) = 0 := (measureReal_eq_zero_iff (by finiteness)).1
+      (le_antisymm hS measureReal_nonneg)
     have hvol : volume (Ioo (0 : ℝ) 1 ∩ Iic c) = 0 :=
       measure_mono_null (fun v hv ↦ (hv.1.1.not_ge (hv.2.trans hc0)).elim) measure_empty
-    rw [hvol]
-    exact measure_mono_null hsub hμa
+    rw [hvol, hμ]
   rcases lt_or_ge c 1 with hc1 | hc1
   · -- `{F ≤ c} = ]-∞, G c]`
     have hGc := h.mapsTo_inv ⟨hc0, hc1⟩
     have hFG := h.right_inv c ⟨hc0, hc1⟩
+    obtain ⟨ε, hε, hIoo⟩ := exists_Ioo_subset_of_isOpen h.isOpen hGc
     have hset : cdf μ ⁻¹' Iic c = Iic (G c) := by
       ext x
       simp only [mem_preimage, mem_Iic]
       refine ⟨fun hx ↦ le_of_not_gt fun hlt ↦ ?_, fun hx ↦ hFG ▸ monotone_cdf μ hx⟩
-      -- some `y ∈ ]G c, min x b[` has `F y > c` by injectivity on `]a,b[`
-      set y := min ((G c + x) / 2) ((G c + b) / 2)
-      have hy : y ∈ Ioo a b := ⟨by
-        have := hGc.1; have := hGc.2; simp only [y, lt_min_iff]; constructor <;> linarith,
-        by have := hGc.2; simp only [y, min_lt_iff]; right; linarith⟩
-      have hyG : G c < y := by simp only [y, lt_min_iff]; constructor <;> linarith [hGc.2]
+      -- some `y ∈ ]G c, x]` close to `G c` lies in `I` and has `F y = c`, against injectivity
+      set y := min ((G c + x) / 2) (G c + ε / 2)
+      have hyG : G c < y := by simp only [y, lt_min_iff]; constructor <;> linarith
+      have hy : y ∈ I := hIoo ⟨by linarith, by
+        have : y ≤ G c + ε / 2 := min_le_right _ _
+        linarith⟩
       have hyx : y ≤ x := by simp only [y, min_le_iff]; left; linarith
       have hFy : cdf μ y = c := le_antisymm ((monotone_cdf μ hyx).trans hx)
         (hFG ▸ monotone_cdf μ hyG.le)
@@ -288,13 +293,38 @@ theorem IsCdfBijection.map_cdf (h : IsCdfBijection (cdf μ) a b G) :
 omit [IsProbabilityMeasure P] in
 /-- CDIS P.V, id 92, second claim: `F_X(X)` is uniform on `]0,1[`. -/
 theorem IsCdfBijection.hasLaw_cdf_comp {X : Ω → ℝ} (hX : HasLaw X μ P)
-    (h : IsCdfBijection (cdf μ) a b G) :
+    (h : IsCdfBijection (cdf μ) I G) :
     HasLaw (fun ω ↦ cdf μ (X ω)) (volume.restrict (Ioo (0 : ℝ) 1)) P where
   aemeasurable := (monotone_cdf μ).measurable.comp_aemeasurable hX.aemeasurable
   map_eq := by
     rw [show (fun ω ↦ cdf μ (X ω)) = cdf μ ∘ X from rfl,
       ← AEMeasurable.map_map_of_aemeasurable (monotone_cdf μ).measurable.aemeasurable
         hX.aemeasurable, hX.map_eq, h.map_cdf]
+
+/-- Id 92 applies to the exponential law of rate `r` on `I = ]0,+∞[`, where
+`F(x) = 1 - e^{-r x}` and `F⁻¹(u) = -log(1 - u) / r`. -/
+theorem isCdfBijection_expMeasure {r : ℝ} (hr : 0 < r) :
+    IsCdfBijection (cdf (expMeasure r)) (Ioi 0) (fun u ↦ -Real.log (1 - u) / r) where
+  isOpen := isOpen_Ioi
+  mapsTo x hx := by
+    have hx : 0 < x := hx
+    have hexp : Real.exp (-(r * x)) < 1 := Real.exp_lt_one_iff.2 (by nlinarith)
+    rw [cdf_expMeasure_eq hr, ite_eq_left_of_eq_true _ _ (eq_true hx.le)]
+    exact ⟨by linarith, by linarith [Real.exp_pos (-(r * x))]⟩
+  mapsTo_inv u hu := by
+    have hlog : Real.log (1 - u) < 0 := Real.log_neg (by linarith [hu.2]) (by linarith [hu.1])
+    exact div_pos (neg_pos.2 hlog) hr
+  left_inv x hx := by
+    have hx : 0 < x := hx
+    rw [cdf_expMeasure_eq hr, ite_eq_left_of_eq_true _ _ (eq_true hx.le), sub_sub_cancel,
+      Real.log_exp]
+    field_simp
+  right_inv u hu := by
+    have hlog : Real.log (1 - u) < 0 := Real.log_neg (by linarith [hu.2]) (by linarith [hu.1])
+    have hG : 0 ≤ -Real.log (1 - u) / r := (div_pos (neg_pos.2 hlog) hr).le
+    rw [cdf_expMeasure_eq hr, ite_eq_left_of_eq_true _ _ (eq_true hG), mul_div_cancel₀ _ hr.ne',
+      neg_neg, Real.exp_log (by linarith [hu.2])]
+    ring
 
 end Bijective
 

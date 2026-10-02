@@ -8,7 +8,7 @@ import Mathlib.MeasureTheory.Measure.WithDensity
 import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 
 /-!
-# CDIS Probabilités II: bridge statement (V3 sample)
+# CDIS Probabilités II: bridge statement
 
 * id 42: two real random variables with densities `f_X`, `f_Y` are independent iff the pair
   `(X, Y)` has density `f_X(x) f_Y(y)` on `ℝ²`.

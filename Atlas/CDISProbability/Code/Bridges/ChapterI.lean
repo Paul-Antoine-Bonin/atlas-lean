@@ -7,7 +7,7 @@ import Mathlib.Probability.CDF
 import Mathlib.MeasureTheory.Integral.Bochner.Set
 
 /-!
-# CDIS Probabilités I: bridge statements (V3 sample)
+# CDIS Probabilités I: bridge statements
 
 Faithful Lean versions of three statements of the Mines Paris course CDIS
 (Boisgérault et al., CC BY-NC-SA 4.0), each proved from an existing Mathlib lemma.
