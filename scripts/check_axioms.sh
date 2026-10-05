@@ -43,31 +43,9 @@ private def containsWantedWrapper (type : Lean.Expr) : Bool :=
       name == ``ProofWanted || name == ``DefWanted || name == ``DerivedWanted
     | _ => false).isSome
 
-private def normalizeAuditedType
-    (auditedConstants : Lean.NameHashSet) (type : Lean.Expr) : Lean.Meta.MetaM Lean.Expr :=
-  Lean.Meta.transform type (pre := fun expression => do
-    let reduced ← Lean.Meta.withTransparency .reducible <| Lean.Meta.whnf expression
-    if reduced != expression then
-      return .visit reduced
-
-    if let .const name _ := expression.getAppFn then
-      if auditedConstants.contains name then
-        let unfolded ← Lean.Meta.withTransparency .all <| Lean.Meta.whnf expression
-        if unfolded != expression then
-          return .visit unfolded
-
-    pure .continue)
-
 run_cmd do
   let env ← Lean.getEnv
   let mut failed := false
-  let mut auditedConstants := Lean.NameHashSet.empty
-
-  for i in [0:env.header.moduleNames.size] do
-    let moduleName := env.header.moduleNames[i]!
-    if (libraryOf? moduleName).isSome then
-      for name in env.header.moduleData[i]!.constNames do
-        auditedConstants := auditedConstants.insert name
 
   for i in [0:env.header.moduleNames.size] do
     let moduleName := env.header.moduleNames[i]!
@@ -89,8 +67,7 @@ run_cmd do
       if (Lean.Compiler.getImplementedBy? env name).isSome then
         Lean.logError m!"{name} uses implemented_by"
         failed := true
-      let normalizedType ← liftTermElabM do normalizeAuditedType auditedConstants info.type
-      if containsWantedWrapper normalizedType then
+      if containsWantedWrapper info.type then
         hasWantedDeclaration := true
 
       let axioms ← Lean.collectAxioms name
