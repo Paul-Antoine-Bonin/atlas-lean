@@ -1,0 +1,10 @@
+module
+
+public import MathlibExt.NumberTheory.PisotNumber
+
+namespace MetaMathlibExt
+
+example {q : ℝ} (hq : IsPisotNumber q) : IsIntegral ℤ q := hq.1
+example {q : ℝ} (hq : IsPisotNumber q) : 1 < q := hq.2.1
+
+end MetaMathlibExt
