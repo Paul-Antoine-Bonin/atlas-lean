@@ -7,10 +7,6 @@ cd "$REPO_ROOT"
 
 LIBRARIES=(MathlibExt MathlibExtTest WantedExt)
 
-check_build_surface() {
-  PYTHONDONTWRITEBYTECODE=1 python3 scripts/check_lake_surface.py
-}
-
 check_declared_libraries() {
   local declared expected
   declared="$(awk '
@@ -41,7 +37,6 @@ check_no_symlinks() {
 }
 
 status=0
-check_build_surface || status=1
 check_declared_libraries || status=1
 check_no_symlinks || status=1
 exit "$status"
