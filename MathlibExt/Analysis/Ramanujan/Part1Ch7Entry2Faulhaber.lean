@@ -21,6 +21,7 @@ import Mathlib.Algebra.Polynomial.Basic
 import Mathlib.Analysis.CStarAlgebra.Classes
 import Mathlib.Analysis.Calculus.ContDiff.Basic
 import Mathlib.Analysis.Complex.Exponential
+import Mathlib.Analysis.Complex.LocallyUniformLimit
 import Mathlib.Analysis.Real.Sqrt
 import Mathlib.Analysis.SpecialFunctions.Complex.Log
 import Mathlib.Analysis.SpecialFunctions.Gamma.Basic

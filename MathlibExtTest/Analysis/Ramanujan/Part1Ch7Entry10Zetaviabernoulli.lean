@@ -12,7 +12,6 @@ the identity at `r = -2`.
 namespace MathlibExtTest.Analysis.Ramanujan.Part1Ch7Entry10Zetaviabernoulli
 
 open MathlibExt.Analysis.Ramanujan.Part1Ch7.Entry10Zetaviabernoulli
-open MathlibExt.Analysis.Ramanujan.Part1Ch7
 
 -- Both sides vanish at `n = 1`.
 example (phi : ℂ → ℂ → ℂ) (r : ℂ) : chapter7Entry10CorollaryLeft phi 1 r = 0 := by simp
