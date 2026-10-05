@@ -459,7 +459,7 @@ private lemma pillaiC_finish {U V W : ℕ} (hVod : Odd V)
             = 2 ^ (2 * W + 1) * 2 ^ (3 - (2 * W + 1)) := by
           conv_lhs => rw [← hZZ]
           rw [pow_add]
-        norm_num at h3
+        norm_num at h3 ⊢
         exact h3
       have h9 : (2 : ℕ) ^ (2 * W + 1) * ((2 : ℕ) ^ ((U + U) - (2 * W + 1)) - 1)
           = 2 ^ (2 * W + 1) * (2 ^ (3 - (2 * W + 1)) * T) := by
