@@ -21,13 +21,14 @@ the finiteness side-condition of `HasPolynomialGrowth` is what excludes the junk
 example :
     letI P : Group.Generators (Multiplicative ℤ) (Fin 1) :=
       ⟨fun _ => Multiplicative.ofAdd 1, by
-        rw [eq_top_iff']
-        intro g _
-        obtain ⟨n, rfl⟩ : ∃ n : ℤ, g = Multiplicative.ofAdd n :=
+        rw [Subgroup.eq_top_iff']
+        intro g
+        obtain ⟨n, hn⟩ : ∃ n : ℤ, g = Multiplicative.ofAdd n :=
           ⟨Multiplicative.toAdd g, by simp⟩
+        rw [hn]
         have hgen : Multiplicative.ofAdd n = (Multiplicative.ofAdd (1 : ℤ)) ^ n := by
-          rw [← Multiplicative.ofAdd_one, ← Multiplicative.ofAdd_zpow]
+          simpa using (ofAdd_zsmul n (1 : ℤ))
         rw [hgen]
-        exact Subgroup.zpow_mem (Subgroup.subset_closure (by simp)) n⟩
+        exact zpow_mem (Subgroup.subset_closure (by simp)) n⟩
     P.growth 0 = 1 :=
   Group.Generators.growth_zero _
