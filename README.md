@@ -21,6 +21,26 @@
 | **v2** | In development | Repository root | [Apache 2.0](LICENSE) |
 | **v1** | Archived and available | [`v1/`](v1/README.md) | [Original v1 license](v1/LICENSE) |
 
+## Formalized mathematics libraries
+
+The root Lake package is limited to three libraries:
+
+| Directory | Purpose |
+| --- | --- |
+| [`MathlibExt/`](MathlibExt/README.md) | Reusable, fully proved extensions to Mathlib |
+| [`MathlibExtTest/`](MathlibExtTest/README.md) | Tests, benchmarks, and diagnostics for `MathlibExt` |
+| [`WantedExt/`](WantedExt/README.md) | Established results whose Lean implementation or proof is deferred |
+
+Repository checks live in [`scripts/`](scripts/README.md). Run the complete
+root validation with:
+
+```bash
+scripts/check.sh
+```
+
+The existing `Atlas/` developments and archived `v1/` release are not part of
+this root build. They retain their own build configuration.
+
 ## About ATLAS
 
 ATLAS translates mathematical statements and proofs from undergraduate and

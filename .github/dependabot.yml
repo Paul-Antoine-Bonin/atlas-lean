@@ -1,0 +1,17 @@
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directories:
+      - /.github/workflows
+    schedule:
+      interval: monthly
+    groups:
+      actions-version-updates:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      actions-security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"

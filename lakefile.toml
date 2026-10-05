@@ -1,0 +1,35 @@
+name = "atlas"
+version = "0.1.0"
+keywords = ["math", "formalization"]
+defaultTargets = ["MathlibExt", "WantedExt"]
+testDriver = "MathlibExtTest"
+
+[leanOptions]
+pp.unicode.fun = true
+autoImplicit = false
+relaxedAutoImplicit = false
+weak.linter.mathlibStandardSet = true
+# Imported developments may retain their original file headers.
+weak.linter.style.header = false
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.34.1"
+
+# Reusable, proved mathematics that extends Mathlib.
+[[lean_lib]]
+name = "MathlibExt"
+globs = ["MathlibExt.+"]
+
+# Established results whose Lean implementation or proof is deferred.
+[[lean_lib]]
+name = "WantedExt"
+globs = ["WantedExt.+"]
+leanOptions = { weak.linter.privateModule = false }
+
+# Tests and diagnostics for MathlibExt. `lake test` builds this library.
+[[lean_lib]]
+name = "MathlibExtTest"
+globs = ["MathlibExtTest.+"]
+leanOptions = { weak.linter.mathlibStandardSet = false, weak.linter.privateModule = false, pp.mvars.anonymous = false }
