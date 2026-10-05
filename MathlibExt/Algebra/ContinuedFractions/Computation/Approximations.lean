@@ -1,0 +1,54 @@
+module
+
+public import Mathlib.Algebra.ContinuedFractions.Computation.Approximations
+
+/-!
+# Strict growth of regular continued-fraction denominators
+
+This file proves strict growth after the potentially equal initial denominator
+pair. The source paper uses the adjacent inequality rather than stating this
+universal form verbatim.
+
+Mathlib already supplies weak monotonicity in `GenContFract.of_den_mono`, the
+recurrence in `GenContFract.dens_recurrence`, and the alternating error formula
+in `GenContFract.sub_convs_eq`. Only the strict order consequence is added.
+-/
+
+@[expose] public section
+
+namespace GenContFract
+
+variable {K : Type*} {v : K} [Field K] [LinearOrder K]
+  [IsStrictOrderedRing K] [FloorRing K]
+
+/-- Successive denominators of a regular continued fraction are strictly
+increasing after the initial denominator, provided the next partial
+denominator exists.
+
+This isolates the prerequisite used in arXiv:2607.23662, source item
+`2607.23662:D07`. The paper uses `q_(k-1) < q_k` rather than stating this
+universal form verbatim. The shift is necessary because `dens 0 = 1`, while
+`dens 1` can also equal `1`. -/
+theorem of_den_succ_lt_succ_succ (n : ℕ)
+    (not_terminatedAt : ¬(GenContFract.of v).TerminatedAt (n + 1)) :
+    (GenContFract.of v).dens (n + 1) <
+      (GenContFract.of v).dens (n + 2) := by
+  let g := GenContFract.of v
+  obtain ⟨gp, hgp⟩ : ∃ gp, g.s.get? (n + 1) = some gp :=
+    Option.ne_none_iff_exists'.mp not_terminatedAt
+  have ha : gp.a = 1 := of_partNum_eq_one (partNum_eq_s_a hgp)
+  have hb : 1 ≤ gp.b := of_one_le_get?_partDen (partDen_eq_s_b hgp)
+  have hn : n = 0 ∨ ¬g.TerminatedAt (n - 1) := by
+    by_cases hn0 : n = 0
+    · exact Or.inl hn0
+    · exact Or.inr (mt (terminated_stable (by omega)) not_terminatedAt)
+  have hdn : 0 < g.dens n := by
+    have hfib : (0 : K) < Nat.fib (n + 1) := by
+      exact_mod_cast Nat.fib_pos.mpr (by omega)
+    exact hfib.trans_le (succ_nth_fib_le_of_nth_den hn)
+  have hmono : g.dens (n + 1) ≤ gp.b * g.dens (n + 1) := by
+    simpa using mul_le_mul_of_nonneg_right hb zero_le_of_den
+  rw [dens_recurrence hgp rfl rfl, ha, one_mul]
+  exact lt_of_le_of_lt hmono (lt_add_of_pos_right _ hdn)
+
+end GenContFract
