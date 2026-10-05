@@ -1,6 +1,6 @@
 module
 
-public import Mathlib.FieldTheory.AlgebraicClosure.Basic
+public import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
 public import MathlibExt.AlgebraicGeometry.CubicSurface
 
 @[expose] public section
