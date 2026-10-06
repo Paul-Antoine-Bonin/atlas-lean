@@ -177,6 +177,7 @@ if [[ "${1:-}" == "env" && "${2:-}" == "lean" ]]; then
   cp "$3" "$FAKE_LEAN_INPUT"
 fi
 printf '%s\n' "${FAKE_LAKE_OUTPUT:-Build completed successfully.}"
+exit "${FAKE_LAKE_STATUS:-0}"
 SH
 chmod +x "$FAKE_BIN/lake"
 FAKE_LEAN_INPUT="$TMP_ROOT/lean-input.lean"
@@ -191,6 +192,15 @@ grep -qx 'build MathlibExt WantedExt MathlibExtTest' "$FAKE_LAKE_LOG" ||
   fail "compiler diagnostics built the wrong targets"
 [[ "$(wc -l <"$FAKE_LAKE_LOG")" -eq 1 ]] ||
   fail "compiler diagnostics invoked Lake more than once"
+grep -q 'Build completed successfully' "$TMP_ROOT/output.log" ||
+  fail "compiler diagnostics hid live build output"
+
+if env PATH="$FAKE_BIN:$PATH" FAKE_LAKE_STATUS=17 \
+  "$REPO_ROOT/scripts/check_diagnostics.sh" >"$TMP_ROOT/output.log" 2>&1; then
+  fail "failed Lake build unexpectedly passed"
+fi
+grep -q 'FAIL \[build\]' "$TMP_ROOT/output.log" ||
+  fail "failed Lake build produced the wrong diagnostic"
 
 if env PATH="$FAKE_BIN:$PATH" \
   FAKE_LAKE_OUTPUT="warning: MathlibExt/Bad.lean:1:1: declaration uses 'sorry'" \

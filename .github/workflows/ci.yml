@@ -18,7 +18,7 @@ concurrency:
 jobs:
   preflight:
     name: repository integrity
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -31,7 +31,7 @@ jobs:
   build:
     needs: preflight
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -44,6 +44,18 @@ jobs:
           df -h /
           sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc
           df -h /
+
+      - name: Add swap for cold Lean builds
+        run: |
+          set -euo pipefail
+          df -h /mnt
+          free -h
+          sudo fallocate -l 16G /mnt/lean-swap
+          sudo chmod 600 /mnt/lean-swap
+          sudo mkswap /mnt/lean-swap
+          sudo swapon /mnt/lean-swap
+          swapon --show
+          free -h
 
       - name: Install elan v4.2.4
         run: |
