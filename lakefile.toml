@@ -1,7 +1,7 @@
 name = "atlas"
 version = "0.1.0"
 keywords = ["math", "formalization"]
-defaultTargets = ["MathlibExt", "WantedExt"]
+defaultTargets = ["MathlibExt", "CSLibExt", "WantedExt"]
 testDriver = "MathlibExtTest"
 
 [leanOptions]
@@ -22,6 +22,11 @@ rev = "v4.34.1"
 name = "MathlibExt"
 globs = ["MathlibExt.+"]
 
+# Reusable, proved computer-science developments built on MathlibExt.
+[[lean_lib]]
+name = "CSLibExt"
+globs = ["CSLibExt.+"]
+
 # Established results whose Lean implementation or proof is deferred.
 [[lean_lib]]
 name = "WantedExt"
@@ -32,4 +37,10 @@ leanOptions = { weak.linter.privateModule = false }
 [[lean_lib]]
 name = "MathlibExtTest"
 globs = ["MathlibExtTest.+"]
+leanOptions = { weak.linter.mathlibStandardSet = false, weak.linter.privateModule = false, pp.mvars.anonymous = false }
+
+# Tests and diagnostics for CSLibExt.
+[[lean_lib]]
+name = "CSLibExtTest"
+globs = ["CSLibExtTest.+"]
 leanOptions = { weak.linter.mathlibStandardSet = false, weak.linter.privateModule = false, pp.mvars.anonymous = false }

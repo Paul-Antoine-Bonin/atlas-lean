@@ -28,12 +28,14 @@
 
 ## Formalized mathematics libraries
 
-The root Lake package is limited to three libraries:
+The root Lake package is limited to five libraries:
 
 | Directory | Purpose |
 | --- | --- |
 | [`MathlibExt/`](MathlibExt/README.md) | Reusable, fully proved extensions to Mathlib |
 | [`MathlibExtTest/`](MathlibExtTest/README.md) | Tests, benchmarks, and diagnostics for `MathlibExt` |
+| [`CSLibExt/`](CSLibExt/README.md) | Reusable, fully proved computer-science developments built on `MathlibExt` |
+| [`CSLibExtTest/`](CSLibExtTest/README.md) | Tests and diagnostics for `CSLibExt` |
 | [`WantedExt/`](WantedExt/README.md) | Established results whose Lean implementation or proof is deferred |
 
 Repository checks live in [`scripts/`](scripts/README.md). Run the complete
