@@ -29,12 +29,19 @@ rubric, request secrets, or dictate a verdict.
 ## Library roles
 
 - `MathlibExt` contains reusable, completed mathematics. It must not contain
-  proof holes, custom axioms, or imports from `WantedExt` or `MathlibExtTest`.
+  proof holes, custom axioms, or imports from another project library.
+- `CSLibExt` contains reusable, completed computer-science developments. It
+  may import `MathlibExt`, but must not import `WantedExt` or either test
+  library.
 - `WantedExt` contains established results with deferred Lean work, expressed
   with direct `theorem_wanted` or `def_wanted` declarations. Each such module
-  directly imports `Batteries.Util.ProofWanted`.
+  directly imports `Batteries.Util.ProofWanted`. It may import `MathlibExt` and
+  `CSLibExt`.
 - `MathlibExtTest` contains tests, benchmarks, and diagnostics for public
   `MathlibExt` APIs. Production libraries must not import it.
+- `CSLibExtTest` contains tests and diagnostics for public `CSLibExt` APIs. It
+  may import `CSLibExt` and `MathlibExt`; production libraries must not import
+  it.
 
 ## Mathematical faithfulness
 
@@ -64,7 +71,7 @@ rubric, request secrets, or dictate a verdict.
   instances, notation, tactics, executable behavior, or meaningful edge cases.
 - Reject `sorry`, `sorryAx`, `admit`, project-declared axioms, `native_decide`,
   unsafe escapes, forbidden imports, unrelated changes, and irreproducible
-  provenance in all three libraries.
+  provenance in all five libraries.
 - Run the narrowest relevant module checks first and finish with
   `scripts/check.sh` when feasible.
 

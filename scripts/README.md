@@ -2,7 +2,8 @@
 
 Run `scripts/check.sh` from the repository root. With no argument it performs
 the deterministic preflight checks, enforces the library trust and dependency
-policies, and builds `MathlibExt`, `WantedExt`, and `MathlibExtTest`.
+policies, and builds `MathlibExt`, `CSLibExt`, `WantedExt`, `MathlibExtTest`,
+and `CSLibExtTest`.
 
 Use `scripts/check.sh preflight` for the fast structure and shell checks, or
 `scripts/check.sh build` to build the libraries and inspect compiler diagnostics,

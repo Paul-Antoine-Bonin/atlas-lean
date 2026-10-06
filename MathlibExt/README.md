@@ -9,4 +9,4 @@ and diagnostics in `MathlibExtTest`.
 
 Every module must be free of `sorry`, `sorryAx`, `admit`, custom axioms, and
 `native_decide`. It may use only Lean's standard logical axioms and must not
-import `WantedExt` or `MathlibExtTest`.
+import another project library.

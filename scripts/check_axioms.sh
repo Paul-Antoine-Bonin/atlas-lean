@@ -8,7 +8,7 @@ cd "$REPO_ROOT"
 CHECK_FILE="$(mktemp "${TMPDIR:-/tmp}/atlas-axioms.XXXXXX.lean")"
 trap 'rm -f "$CHECK_FILE"' EXIT
 
-for library in MathlibExt MathlibExtTest WantedExt; do
+for library in CSLibExt CSLibExtTest MathlibExt MathlibExtTest WantedExt; do
   while IFS= read -r path; do
     module="${path%.lean}"
     module="${module//\//.}"
@@ -28,14 +28,16 @@ private def trustedAxioms : Array Lean.Name :=
   #[``propext, ``Quot.sound, ``Classical.choice]
 
 private def libraryRoots : Array Lean.Name :=
-  #[`MathlibExt, `MathlibExtTest, `WantedExt]
+  #[`CSLibExt, `CSLibExtTest, `MathlibExt, `MathlibExtTest, `WantedExt]
 
 private def libraryOf? (name : Lean.Name) : Option Lean.Name :=
   libraryRoots.find? (·.isPrefixOf name)
 
 private def mayImport (source target : Lean.Name) : Bool :=
-  (source == `MathlibExtTest && target == `MathlibExt) ||
-    (source == `WantedExt && target == `MathlibExt)
+  (source == `CSLibExt && target == `MathlibExt) ||
+    (source == `CSLibExtTest && (target == `CSLibExt || target == `MathlibExt)) ||
+    (source == `MathlibExtTest && target == `MathlibExt) ||
+    (source == `WantedExt && (target == `CSLibExt || target == `MathlibExt))
 
 private def containsWantedWrapper (type : Lean.Expr) : Bool :=
   (type.find? fun

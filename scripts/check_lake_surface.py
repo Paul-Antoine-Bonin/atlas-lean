@@ -163,8 +163,8 @@ def main() -> None:
     if extra_top_level:
         fail(f"unapproved root target or setting: {', '.join(extra_top_level)}")
 
-    if config.get("defaultTargets") != ["MathlibExt", "WantedExt"]:
-        fail("root default targets must be MathlibExt and WantedExt")
+    if config.get("defaultTargets") != ["MathlibExt", "CSLibExt", "WantedExt"]:
+        fail("root default targets must be MathlibExt, CSLibExt, and WantedExt")
     if config.get("testDriver") != "MathlibExtTest":
         fail("root test driver must be MathlibExtTest")
 
@@ -179,6 +179,8 @@ def main() -> None:
         fail("the root package may depend only on the pinned public Mathlib release")
 
     expected_globs = {
+        "CSLibExt": ["CSLibExt.+"],
+        "CSLibExtTest": ["CSLibExtTest.+"],
         "MathlibExt": ["MathlibExt.+"],
         "MathlibExtTest": ["MathlibExtTest.+"],
         "WantedExt": ["WantedExt.+"],
@@ -193,7 +195,10 @@ def main() -> None:
     if not all(isinstance(name, str) for name in names):
         fail("every root Lean library must have a string name")
     if len(names) != len(set(names)) or set(names) != set(expected_globs):
-        fail("root Lean libraries must be MathlibExt, MathlibExtTest, and WantedExt")
+        fail(
+            "root Lean libraries must be CSLibExt, CSLibExtTest, "
+            "MathlibExt, MathlibExtTest, and WantedExt"
+        )
 
     allowed_library_keys = {"name", "globs", "leanOptions"}
     for library in libraries:

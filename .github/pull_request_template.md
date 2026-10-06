@@ -11,8 +11,17 @@
 - [ ] New reusable mathematics is in `MathlibExt`, with tests or diagnostics in
       `MathlibExtTest`.
 - [ ] Changed `MathlibExt` code contains no proof holes, custom axioms,
-      `native_decide`, or imports from `WantedExt` or `MathlibExtTest`.
+      `native_decide`, or imports from another project library.
 - [ ] This pull request does not change `MathlibExt`, or the items above are
+      complete.
+
+## CSLibExt
+
+- [ ] New reusable computer-science developments are in `CSLibExt`, with tests
+      or diagnostics in `CSLibExtTest`.
+- [ ] Changed `CSLibExt` code contains no proof holes, custom axioms,
+      `native_decide`, or imports from `WantedExt` or either test library.
+- [ ] This pull request does not change `CSLibExt`, or the items above are
       complete.
 
 ## WantedExt
@@ -28,4 +37,10 @@
 
 - [ ] Changed tests and diagnostics contain no proof holes or custom axioms.
 - [ ] This pull request does not change `MathlibExtTest`, or the item above is
+      complete.
+
+## CSLibExtTest
+
+- [ ] Changed tests and diagnostics contain no proof holes or custom axioms.
+- [ ] This pull request does not change `CSLibExtTest`, or the item above is
       complete.
