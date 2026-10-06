@@ -39,7 +39,7 @@ jobs:
     steps:
       - name: Check authorization
         id: check_auth
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const username =
@@ -75,7 +75,7 @@ jobs:
           steps.check_auth.outputs.authorized == 'true' &&
           github.event_name != 'pull_request'
         continue-on-error: true
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const params = {
@@ -96,7 +96,7 @@ jobs:
         if: |
           steps.check_auth.outputs.authorized != 'true' &&
           github.event_name != 'pull_request'
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const issueNumber =
@@ -114,7 +114,7 @@ jobs:
       - name: Resolve target
         if: steps.check_auth.outputs.authorized == 'true'
         id: target
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const fs = require("fs");
@@ -266,7 +266,7 @@ jobs:
 
       - name: Checkout request target
         if: steps.check_auth.outputs.authorized == 'true'
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ steps.target.outputs.ref }}
           fetch-depth: 0
@@ -615,7 +615,7 @@ jobs:
       - name: Submit Codex response
         id: submit
         if: steps.check_auth.outputs.authorized == 'true' && success()
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           CODEX_OUTPUT: ${{ runner.temp }}/codex-io/codex-output.md
           REVIEW_COMMIT: ${{ steps.target.outputs.ref }}
@@ -715,7 +715,7 @@ jobs:
 
       - name: Post workflow failure
         if: failure() && steps.check_auth.outputs.authorized == 'true'
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const issueNumber =
@@ -739,7 +739,7 @@ jobs:
 
       - name: Upload Codex output
         if: always() && steps.check_auth.outputs.authorized == 'true'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: codex-output-${{ github.run_id }}
           path: ${{ runner.temp }}/codex-io/codex-output.md
@@ -785,7 +785,7 @@ jobs:
       actions: write
     steps:
       - name: Cancel CI runs for rejected head
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           REVIEWED_SHA: ${{ needs.codex.outputs.reviewed_sha }}
           REVIEWED_PR: ${{ needs.codex.outputs.pr_number }}
