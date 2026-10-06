@@ -5,6 +5,11 @@
 <h1 align="center">ATLAS</h1>
 
 <p align="center">
+  <a href="https://github.com/facebookresearch/atlas-lean/actions/workflows/ci.yml"><img src="https://github.com/facebookresearch/atlas-lean/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI status" /></a>
+  <a href="https://github.com/leanprover/lean4/releases/tag/v4.34.1"><img src="https://img.shields.io/badge/Lean-v4.34.1-blue" alt="Lean v4.34.1" /></a>
+</p>
+
+<p align="center">
   <strong>Autoformalized Textbook Library At Scale</strong><br />
   A large-scale Lean 4 library of textbook mathematics formalized with LLMs.
 </p>
