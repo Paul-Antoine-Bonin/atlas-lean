@@ -249,4 +249,9 @@ if grep -q '^import v1\.' "$FAKE_LEAN_INPUT"; then
   fail "axiom input included archived v1 source"
 fi
 
+if grep -q 'github\.event\.pull_request\.draft' \
+  "$REPO_ROOT/.github/workflows/ci.yml"; then
+  fail "CI build excludes draft pull requests"
+fi
+
 echo "ok [scripts]: repository policy regression tests passed."
