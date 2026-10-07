@@ -1,6 +1,11 @@
--- Author: @toskua, Avocado
--- Original focused tests by @akiezun in d855ffa90ad200e1ae118101768bd192d0d3c59f.
--- @toskua, Avocado migrated only the representation to Convexity.StdSimplex.
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
 module
 
 public import MathlibExt.Analysis.Convex.KKM

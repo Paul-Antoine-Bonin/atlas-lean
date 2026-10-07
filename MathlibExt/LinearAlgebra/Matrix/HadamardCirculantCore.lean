@@ -1,11 +1,18 @@
 /-
-Authors: Adam Kiezun, Muse Spark 1.3
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
 
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+/-
 Hadamard matrices of order `n + 1` with circulant core, for the Paley case
 (`n` prime with `n % 4 = 3`) and the twin-prime case (`n = p * (p + 2)`
 with `p` and `p + 2` prime). Proves `Wanted` entry
 `exists_hadamard_matrix_with_circulant_core`.
 -/
+
 module
 
 public import Mathlib.Algebra.Group.Fin.Basic

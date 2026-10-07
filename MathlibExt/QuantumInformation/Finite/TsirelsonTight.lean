@@ -1,4 +1,12 @@
 /-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+/-
 Source: B. S. Cirel'son/Tsirelson, "Quantum generalizations of Bell's inequality",
   Letters in Mathematical Physics 4(2) (1980), 93-100, DOI 10.1007/BF00417500.
 Proof: standard 4x4 CHSH observables (Pauli-type block matrices with

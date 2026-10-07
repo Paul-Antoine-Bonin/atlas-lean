@@ -1,8 +1,15 @@
 /-
-Author: @toskua, Avocado
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
 
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+/-
 # Pillai equations and Steuerwald's theorem
 -/
+
 module
 
 public import Mathlib.NumberTheory.ArithmeticFunction.Misc

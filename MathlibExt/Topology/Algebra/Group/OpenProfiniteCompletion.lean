@@ -1,3 +1,25 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+/-
+Portions of this file are adapted from:
+
+`Mathlib/Topology/Algebra/Category/ProfiniteGrp/Limits.lean` (Mathlib):
+Copyright (c) 2024 Nailin Guan. All rights reserved.
+Licensed under the Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+Authors: Nailin Guan, Youle Fang, Jujian Zhang, Yuyang Zhao
+
+`Mathlib/Topology/Algebra/Category/ProfiniteGrp/Completion.lean` (Mathlib):
+Copyright (c) 2026 Adam Topaz. All rights reserved.
+Licensed under the Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+Authors: Adam Topaz
+-/
+
 module
 
 public import Mathlib.Topology.Algebra.Category.ProfiniteGrp.Completion

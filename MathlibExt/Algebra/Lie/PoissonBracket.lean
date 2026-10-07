@@ -1,4 +1,12 @@
 /-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+/-
 Poisson-bracket interface over commutative `ℂ`-algebras: brackets,
 Poisson ideals and primes, Poisson cores with their universal
 property, and basic closure lemmas.

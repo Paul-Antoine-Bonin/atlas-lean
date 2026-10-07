@@ -1,6 +1,20 @@
 /-
-Authors: Adam Kiezun, Muse Spark 1.3, Codex
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
 -/
+
+/-
+Portions of this file are adapted from:
+
+`Mathlib/NumberTheory/LucasLehmer.lean` (Mathlib):
+Copyright (c) 2020 Kim Morrison. All rights reserved.
+Licensed under the Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+Authors: Mario Carneiro, Alastair Irving, Kim Morrison, Ainsley Pahljina
+-/
+
 module
 
 public import Mathlib.NumberTheory.LegendreSymbol.JacobiSymbol
