@@ -1,7 +1,11 @@
--- Author: @toskua, Avocado
--- Original KKM formalization by Adam Kiezun (`@akiezun`) in commit
--- `d855ffa90ad200e1ae118101768bd192d0d3c59f`; `@toskua, Avocado` authored
--- only the `Convexity.StdSimplex` representation migration.
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
 module
 
 public import Mathlib.Geometry.Convex.ConvexSpace.CompactSpaceStdSimplex

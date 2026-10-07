@@ -1,10 +1,17 @@
 /-
-Authors: Adam Kiezun, Muse Spark 1.3
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
 
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+/-
 Non-negative crank generating function (Andrews–Newman / Uncu):
 the number of partitions of `N` with crank `≥ 0` equals the alternating
 sum of partition numbers at triangular offsets.
 -/
+
 module
 
 public import Mathlib.Algebra.BigOperators.Group.Finset.Basic

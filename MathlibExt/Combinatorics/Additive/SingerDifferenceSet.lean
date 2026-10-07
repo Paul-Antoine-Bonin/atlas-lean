@@ -1,10 +1,17 @@
 /-
-Authors: Adam Kiezun, Muse Spark 1.3
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
 
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+/-
 Singer's cyclic difference-set theorem, via the classical projective-plane
 argument: a 2-dimensional subspace of a degree-3 field extension picks out a
 `(q + 1)`-element difference set in `ZMod (q ^ 2 + q + 1)`.
 -/
+
 module
 
 public import Mathlib.Data.ZMod.Basic

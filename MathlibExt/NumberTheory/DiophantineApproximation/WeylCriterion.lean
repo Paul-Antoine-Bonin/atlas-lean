@@ -1,9 +1,16 @@
 /-
-Authors: Adam Kiezun, Muse Spark 1.3
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
 
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+/-
 Weyl's equidistribution criterion: a real sequence is equidistributed modulo 1
 if and only if every nontrivial Fourier mean vanishes.
 -/
+
 module
 
 public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
