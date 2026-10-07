@@ -49,6 +49,10 @@ def check_manifest() -> None:
             "https://github.com/leanprover-community/mathlib4",
             "leanprover-community",
         ),
+        "cslib": (
+            "https://github.com/leanprover/cslib",
+            "leanprover",
+        ),
         "plausible": (
             "https://github.com/leanprover-community/plausible",
             "leanprover-community",
@@ -89,7 +93,7 @@ def check_manifest() -> None:
     if not all(isinstance(name, str) for name in names):
         fail("every manifest package must have a string name")
     if len(names) != len(set(names)) or set(names) != set(expected_sources):
-        fail("root manifest dependency set does not match pinned Mathlib")
+        fail("root manifest dependency set does not match pinned dependencies")
 
     allowed_package_keys = {
         "url",
@@ -131,12 +135,19 @@ def check_manifest() -> None:
         fail("manifest Mathlib revision does not match lakefile.toml")
     if mathlib.get("inherited") is not False:
         fail("Mathlib must be the root package's direct dependency")
+    cslib = packages[names.index("cslib")]
+    if cslib.get("inputRev") != "v4.34.1" or cslib.get("rev") != (
+        "7c8f6c0f67015df29b152fdcffaf7850db2e9185"
+    ):
+        fail("manifest CSLib revision does not match lakefile.toml")
+    if cslib.get("inherited") is not False:
+        fail("CSLib must be a direct root dependency")
     if any(
         package.get("inherited") is not True
         for package in packages
-        if package["name"] != "mathlib"
+        if package["name"] not in {"mathlib", "cslib"}
     ):
-        fail("only Mathlib may be a direct root dependency")
+        fail("only Mathlib and CSLib may be direct root dependencies")
 
 
 def main() -> None:
@@ -173,10 +184,15 @@ def main() -> None:
             "name": "mathlib",
             "scope": "leanprover-community",
             "rev": "v4.34.1",
-        }
+        },
+        {
+            "name": "cslib",
+            "scope": "leanprover",
+            "rev": "v4.34.1",
+        },
     ]
     if config.get("require") != expected_requirements:
-        fail("the root package may depend only on the pinned public Mathlib release")
+        fail("the root package may depend only on pinned public releases")
 
     expected_globs = {
         "CSLibExt": ["CSLibExt.+"],
