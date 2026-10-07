@@ -254,4 +254,38 @@ if grep -q 'github\.event\.pull_request\.draft' \
   fail "CI build excludes draft pull requests"
 fi
 
+# Copyright headers: the Meta header or another project's copyright and license
+# header passes, anything else fails, and --base checks only changed files.
+COPY="$TMP_ROOT/copyright"
+rm -rf "$COPY" && mkdir -p "$COPY"
+python3 - "$REPO_ROOT/scripts/check_copyright.py" "$COPY" <<'PY'
+import importlib.util, sys
+from pathlib import Path
+spec = importlib.util.spec_from_file_location("c", sys.argv[1]); c = importlib.util.module_from_spec(spec); spec.loader.exec_module(c)
+d = Path(sys.argv[2]); body = "import Mathlib\n\ndef x : Nat := 1\n"
+apache = "/-\nCopyright 2026 The Formal Conjectures Authors.\n\nLicensed under the Apache License, Version 2.0.\n-/\n"
+(d / "Meta.lean").write_text(c.META + "\n" + body)
+(d / "Apache.lean").write_text(apache + "\n" + body)
+(d / "None.lean").write_text(body)
+(d / "Doc.lean").write_text("/-! module doc -/\n" + body)
+(d / "Altered.lean").write_text(c.META.replace("All rights reserved.\n", "") + "\n" + body)
+PY
+check_copyright() { (cd "$COPY" && python3 "$REPO_ROOT/scripts/check_copyright.py" "$@") >"$TMP_ROOT/output.log" 2>&1; }
+check_copyright Meta.lean Apache.lean || { cat "$TMP_ROOT/output.log" >&2; fail "valid copyright headers were rejected"; }
+for case in "None.lean:missing copyright header" "Doc.lean:missing copyright header" \
+    "Altered.lean:differs from the standard text"; do
+  if check_copyright "${case%%:*}"; then fail "${case%%:*} passed the copyright check"; fi
+  grep -q -- "${case#*:}" "$TMP_ROOT/output.log" || { cat "$TMP_ROOT/output.log" >&2; fail "${case%%:*}: wrong diagnostic"; }
+done
+check_copyright --fix None.lean && check_copyright None.lean ||
+  fail "--fix did not add an accepted header"
+grep -q '^def x : Nat := 1$' "$COPY/None.lean" || fail "--fix changed the file body"
+(cd "$COPY" && git init -q && git add Meta.lean Doc.lean && git -c user.name=t -c user.email=t@t commit -qm base &&
+  printf 'def y : Nat := 2\n' >New.lean && git add New.lean && git -c user.name=t -c user.email=t@t commit -qm new)
+if check_copyright --base HEAD~1; then fail "--base passed a new file without a header"; fi
+grep -q 'New.lean' "$TMP_ROOT/output.log" || fail "--base did not report the new file"
+if grep -q 'Doc.lean' "$TMP_ROOT/output.log"; then fail "--base checked an unchanged file"; fi
+grep -q 'scripts/check_copyright.py --base' "$REPO_ROOT/.github/workflows/ci.yml" ||
+  fail "CI does not run the copyright check on pull requests"
+
 echo "ok [scripts]: repository policy regression tests passed."

@@ -35,6 +35,25 @@ outlined on that page and do not file a public issue.
 * 80 character line length
 * ...
 
+## Copyright headers
+Every Lean file starts with the Meta header:
+
+```lean
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+```
+
+Code copied from another project keeps that project's copyright and license
+header instead (for example, the Apache 2.0 header of Formal Conjectures).
+CI runs `scripts/check_copyright.py` on the Lean files each pull request adds or
+modifies; `scripts/check_copyright.py --fix FILE...` adds the Meta header to
+files that have none.
+
 ## License
 By contributing to ATLAS, you agree that your contributions will be licensed
 under the LICENSE file in the root directory of this source tree.
