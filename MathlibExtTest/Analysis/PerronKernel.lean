@@ -47,3 +47,8 @@ example {y c T : ℝ} (hy : 0 < y) (hy1 : y ≠ 1) (hc : 0 < c) (hT : 0 < T) :
     ‖PerronKernel.perronKernel y c T - (if 1 < y then (1 : ℂ) else 0)‖ ≤
       Real.exp (Real.log y * c) / |Real.log y| / T / Real.pi :=
   PerronKernel.perron_bound hy hy1 hc hT
+
+#print axioms PerronKernel.boundary_rect_one_div
+#print axioms PerronKernel.boundary_rect_one_div_outside
+#print axioms Complex.boundary_rect_one_div
+#print axioms Complex.boundary_rect_one_div_outside

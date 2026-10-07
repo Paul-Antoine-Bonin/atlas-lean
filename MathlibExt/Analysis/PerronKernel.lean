@@ -8,19 +8,20 @@ LICENSE file in the root directory of this source tree.
 
 module
 
-import Mathlib.Tactic
-public import Mathlib.Analysis.Calculus.ParametricIntervalIntegral
-public import Mathlib.Analysis.Complex.CauchyIntegral
-public import Mathlib.Analysis.Complex.RealDeriv
+public import MathlibExt.Analysis.Complex.RectilinearCycle
+import Mathlib.Tactic.Abel
+import Mathlib.Tactic.FieldSimp
+import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.LinearCombination
+import Mathlib.Tactic.Positivity
+import Mathlib.Tactic.Ring
 public import Mathlib.Analysis.SpecialFunctions.Exp
 public import Mathlib.Analysis.SpecialFunctions.Complex.Log
 public import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 public import Mathlib.Analysis.SpecialFunctions.Pow.Complex
 public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
-public import Mathlib.Analysis.SpecialFunctions.Trigonometric.ArctanDeriv
 public import Mathlib.MeasureTheory.Integral.Bochner.ContinuousLinearMap
 public import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
-public import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 public import Mathlib.Topology.Order.OrderClosed
 
 /-!
@@ -76,226 +77,48 @@ theorem continuous_perronKernel_integrand {y c : ℝ} (hy : 0 < y) (hc : c ≠ 0
     simpa using this
   exact hnum.div hexp hden
 
+/-! The following compatibility lemmas retain the established Perron-kernel
+API while delegating the general interval and rectangle calculations to the
+neutral complex-analysis layer. -/
+
 open Real in
-/-- Scaled arctan integral, via FTC on `arctan (x / d)`. -/
 theorem integral_div_add_sq {d a b : ℝ} (hc : d ≠ 0) :
-    ∫ x : ℝ in a..b, d / (x ^ 2 + d ^ 2) = arctan (b / d) - arctan (a / d) := by
-  have hsq : (0 : ℝ) < d ^ 2 := sq_pos_iff.mpr hc
-  have hderiv : ∀ x : ℝ, HasDerivAt (fun x => arctan (x / d)) (d / (x ^ 2 + d ^ 2)) x := by
-    intro x
-    have h1 : HasDerivAt (fun x : ℝ => x / d) (1 / d) x := by
-      have h := (hasDerivAt_id (x : ℝ)).mul_const (d⁻¹ : ℝ)
-      simpa [div_eq_mul_inv, one_mul] using h
-    have h2 := h1.arctan
-    have hval : 1 / (1 + (x / d) ^ 2) * (1 / d) = d / (x ^ 2 + d ^ 2) := by
-      field_simp
-      ring
-    rw [hval] at h2
-    exact h2
-  have hderivfun : deriv (fun x => arctan (x / d)) = fun x => d / (x ^ 2 + d ^ 2) :=
-    funext fun x => (hderiv x).deriv
-  have hdiff : ∀ x ∈ uIcc a b, DifferentiableAt ℝ (fun x => arctan (x / d)) x :=
-    fun x _ => (hderiv x).differentiableAt
-  have hcont : ContinuousOn (fun x => d / (x ^ 2 + d ^ 2)) (uIcc a b) := by
-    apply Continuous.continuousOn
-    apply Continuous.div continuous_const (continuous_id.pow 2 |>.add continuous_const)
-    intro x
-    exact ne_of_gt (lt_of_lt_of_le hsq (le_add_of_nonneg_left (sq_nonneg x)))
-  exact integral_deriv_eq_sub' _ hderivfun hdiff hcont
+    ∫ x : ℝ in a..b, d / (x ^ 2 + d ^ 2) = arctan (b / d) - arctan (a / d) :=
+  Complex.integral_div_add_sq hc
 
-/-- Integral of an odd real function over a symmetric interval vanishes. -/
 theorem odd_integral_eq_zero {f : ℝ → ℝ} (hodd : ∀ x, f (-x) = -f x) (T : ℝ) :
-    ∫ x : ℝ in (-T)..T, f x = 0 := by
-  have hcomp : ∫ x : ℝ in (-T)..T, f (-x) = ∫ x : ℝ in (-T)..T, f x := by
-    have h := integral_comp_neg (a := -T) (b := T) (f := f)
-    simp only [neg_neg] at h
-    exact h
-  have hodd' : ∫ x : ℝ in (-T)..T, f (-x) = -∫ x : ℝ in (-T)..T, f x := by
-    simp only [hodd, intervalIntegral.integral_neg]
-  linarith [hcomp, hodd']
+    ∫ x : ℝ in (-T)..T, f x = 0 :=
+  Complex.odd_integral_eq_zero hodd T
 
 open Real in
-/-- Vertical side integral of `1/s`: `2 * arctan (T / c)`. -/
 theorem vertical_side_one_div {c T : ℝ} (hc : c ≠ 0) (hT : 0 ≤ T) :
-    ∫ y : ℝ in (-T)..T, (1 : ℂ) / (c + y * Complex.I) = 2 * arctan (T / c) := by
-  have hab : -T ≤ T := by linarith
-  have hcont : Continuous (fun y : ℝ => (1 : ℂ) / (c + y * Complex.I)) := by
-    apply Continuous.div continuous_const
-      (continuous_const.add (continuous_ofReal.mul continuous_const))
-    intro y h
-    apply hc
-    have := congrArg Complex.re h
-    simpa using this
-  have hf : IntegrableOn (fun y : ℝ => (1 : ℂ) / (c + y * Complex.I)) (Ioc (-T) T) volume :=
-    (intervalIntegrable_iff_integrableOn_Ioc_of_le hab).mp (hcont.intervalIntegrable _ _)
-  have hfi : IntervalIntegrable (fun y : ℝ => (1 : ℂ) / (c + y * Complex.I)) volume (-T) T :=
-    (intervalIntegrable_iff_integrableOn_Ioc_of_le hab).mpr hf
-  have hre_integral :
-      (∫ y : ℝ in (-T)..T, (1 : ℂ) / (c + y * Complex.I)).re =
-        ∫ y : ℝ in (-T)..T, ((1 : ℂ) / (c + y * Complex.I)).re := by
-    simpa using (intervalIntegral.intervalIntegral_re hfi).symm
-  have him_integral :
-      (∫ y : ℝ in (-T)..T, (1 : ℂ) / (c + y * Complex.I)).im =
-        ∫ y : ℝ in (-T)..T, ((1 : ℂ) / (c + y * Complex.I)).im := by
-    simpa using (intervalIntegral.intervalIntegral_im hfi).symm
-  have hre : ∀ y : ℝ, ((1 : ℂ) / (c + y * Complex.I)).re = c / (y ^ 2 + c ^ 2) := by
-    intro y
-    rw [Complex.div_re]
-    simp only [Complex.one_re, Complex.one_im, Complex.add_re, Complex.ofReal_re,
-      Complex.mul_re, Complex.ofReal_im, Complex.I_re, Complex.I_im,
-      Complex.normSq_add_mul_I]
-    field_simp
-    ring
-  have him : ∀ y : ℝ, ((1 : ℂ) / (c + y * Complex.I)).im = -y / (y ^ 2 + c ^ 2) := by
-    intro y
-    rw [Complex.div_im]
-    simp only [Complex.one_re, Complex.one_im, Complex.add_re, Complex.ofReal_re,
-      Complex.mul_re, Complex.ofReal_im, Complex.I_re, Complex.I_im,
-      Complex.add_im, Complex.mul_im, Complex.normSq_add_mul_I]
-    field_simp
-    ring
-  apply Complex.ext
-  · rw [hre_integral]
-    simp only [hre, integral_div_add_sq hc]
-    rw [show (-T) / c = -(T / c) by ring, arctan_neg]
-    have h2re : (2 : ℂ).re = 2 := rfl
-    have h2im : (2 : ℂ).im = 0 := rfl
-    rw [Complex.mul_re, h2re, h2im, Complex.ofReal_re, Complex.ofReal_im]
-    ring
-  · rw [him_integral]
-    simp_rw [him]
-    have hodd : ∀ y : ℝ, -(-y) / ((-y) ^ 2 + c ^ 2) = -(-y / (y ^ 2 + c ^ 2)) := by
-      intro y
-      rw [show (-y) ^ 2 = y ^ 2 by ring]
-      ring
-    have h0 := odd_integral_eq_zero (f := fun y => -y / (y ^ 2 + c ^ 2)) hodd T
-    simp only [h0]
-    simp
+    ∫ y : ℝ in (-T)..T, (1 : ℂ) / (c + y * Complex.I) = 2 * arctan (T / c) :=
+  Complex.vertical_side_one_div hc hT
 
 open Real in
-/-- Bottom-minus-top of `1/s`: `2i·Δarctan` (log parts cancel). -/
 theorem horiz_diff_one_div {a b T : ℝ} (hT : T ≠ 0) (hab : a ≤ b) :
     (∫ x : ℝ in a..b, (1 : ℂ) / (x + -T * Complex.I))
-      - (∫ x : ℝ in a..b, (1 : ℂ) / (x + T * Complex.I))
-      = 2 * Complex.I * (arctan (b / T) - arctan (a / T)) := by
-  have hcb : ∀ x : ℝ, ((x : ℂ) + -T * Complex.I) ≠ 0 := by
-    intro x h
-    apply hT
-    have := congrArg Complex.im h
-    simpa using this
-  have hct : ∀ x : ℝ, ((x : ℂ) + T * Complex.I) ≠ 0 := by
-    intro x h
-    apply hT
-    have := congrArg Complex.im h
-    simpa using this
-  have hcontb : Continuous (fun x : ℝ => (1 : ℂ) / (x + -T * Complex.I)) :=
-    Continuous.div continuous_const
-      (continuous_ofReal.add (continuous_const.mul continuous_const)) hcb
-  have hcontt : Continuous (fun x : ℝ => (1 : ℂ) / (x + T * Complex.I)) :=
-    Continuous.div continuous_const
-      (continuous_ofReal.add (continuous_const.mul continuous_const)) hct
-  have hfb : IntegrableOn (fun x : ℝ => (1 : ℂ) / (x + -T * Complex.I)) (Ioc a b) volume :=
-    (intervalIntegrable_iff_integrableOn_Ioc_of_le hab).mp (hcontb.intervalIntegrable _ _)
-  have hft : IntegrableOn (fun x : ℝ => (1 : ℂ) / (x + T * Complex.I)) (Ioc a b) volume :=
-    (intervalIntegrable_iff_integrableOn_Ioc_of_le hab).mp (hcontt.intervalIntegrable _ _)
-  have hreb : ∀ x : ℝ, ((1 : ℂ) / (x + -T * Complex.I)).re = x / (x ^ 2 + T ^ 2) := by
-    intro x
-    rw [Complex.div_re]
-    simp only [Complex.one_re, Complex.one_im, Complex.add_re, Complex.ofReal_re,
-      Complex.mul_re, Complex.ofReal_im, Complex.I_re, Complex.I_im,
-      Complex.neg_re, Complex.neg_im, Complex.normSq_apply, Complex.add_im,
-      Complex.mul_im, one_mul, mul_one, mul_zero, zero_mul, sub_zero, add_zero,
-      zero_add, neg_zero]
-    field_simp
-    ring
-  have hret : ∀ x : ℝ, ((1 : ℂ) / (x + T * Complex.I)).re = x / (x ^ 2 + T ^ 2) := by
-    intro x
-    rw [Complex.div_re]
-    simp only [Complex.one_re, Complex.one_im, Complex.add_re, Complex.ofReal_re,
-      Complex.mul_re, Complex.ofReal_im, Complex.I_re, Complex.I_im,
-      Complex.normSq_apply, Complex.add_im, Complex.mul_im, one_mul, mul_one,
-      mul_zero, zero_mul, sub_zero, add_zero, zero_add]
-    field_simp
-    ring
-  have himb : ∀ x : ℝ, ((1 : ℂ) / (x + -T * Complex.I)).im = T / (x ^ 2 + T ^ 2) := by
-    intro x
-    rw [Complex.div_im]
-    simp only [Complex.one_re, Complex.one_im, Complex.add_re, Complex.ofReal_re,
-      Complex.mul_re, Complex.ofReal_im, Complex.I_re, Complex.I_im,
-      Complex.add_im, Complex.mul_im, Complex.neg_re, Complex.neg_im,
-      Complex.normSq_apply, one_mul, mul_one, mul_zero, zero_mul,
-      add_zero, zero_add]
-    field_simp
-    ring
-  have himt : ∀ x : ℝ, ((1 : ℂ) / (x + T * Complex.I)).im = -T / (x ^ 2 + T ^ 2) := by
-    intro x
-    rw [Complex.div_im]
-    simp only [Complex.one_re, Complex.one_im, Complex.add_re, Complex.ofReal_re,
-      Complex.mul_re, Complex.ofReal_im, Complex.I_re, Complex.I_im,
-      Complex.add_im, Complex.mul_im, Complex.normSq_apply, one_mul, mul_one,
-      mul_zero, zero_mul, sub_zero, add_zero, zero_add]
-    field_simp
-    ring
-  have h2re : (2 : ℂ).re = 2 := rfl
-  have h2im : (2 : ℂ).im = 0 := rfl
-  have hifb : IntervalIntegrable (fun x : ℝ => (1 : ℂ) / (x + -T * Complex.I))
-      volume a b := (intervalIntegrable_iff_integrableOn_Ioc_of_le hab).mpr hfb
-  have hift : IntervalIntegrable (fun x : ℝ => (1 : ℂ) / (x + T * Complex.I))
-      volume a b := (intervalIntegrable_iff_integrableOn_Ioc_of_le hab).mpr hft
-  have hreb_integral :
-      (∫ x : ℝ in a..b, (1 : ℂ) / (x + -T * Complex.I)).re =
-        ∫ x : ℝ in a..b, ((1 : ℂ) / (x + -T * Complex.I)).re := by
-    simpa using (intervalIntegral.intervalIntegral_re hifb).symm
-  have hret_integral :
-      (∫ x : ℝ in a..b, (1 : ℂ) / (x + T * Complex.I)).re =
-        ∫ x : ℝ in a..b, ((1 : ℂ) / (x + T * Complex.I)).re := by
-    simpa using (intervalIntegral.intervalIntegral_re hift).symm
-  have himb_integral :
-      (∫ x : ℝ in a..b, (1 : ℂ) / (x + -T * Complex.I)).im =
-        ∫ x : ℝ in a..b, ((1 : ℂ) / (x + -T * Complex.I)).im := by
-    simpa using (intervalIntegral.intervalIntegral_im hifb).symm
-  have himt_integral :
-      (∫ x : ℝ in a..b, (1 : ℂ) / (x + T * Complex.I)).im =
-        ∫ x : ℝ in a..b, ((1 : ℂ) / (x + T * Complex.I)).im := by
-    simpa using (intervalIntegral.intervalIntegral_im hift).symm
-  apply Complex.ext
-  · simp only [Complex.sub_re]
-    rw [hreb_integral, hret_integral]
-    simp_rw [hreb, hret, sub_self]
-    simp only [Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im,
-      h2re, h2im, Complex.ofReal_re, Complex.ofReal_im,
-      Complex.sub_re, Complex.sub_im, mul_zero, zero_mul, sub_self]
-  · simp only [Complex.sub_im]
-    rw [himb_integral, himt_integral]
-    simp_rw [himb, himt]
-    have hneg : ∀ x : ℝ, -T / (x ^ 2 + T ^ 2) = -(T / (x ^ 2 + T ^ 2)) := by
-      intro x
-      ring
-    simp_rw [hneg, intervalIntegral.integral_neg, integral_div_add_sq hT]
-    simp only [Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im,
-      h2re, h2im, Complex.ofReal_re, Complex.ofReal_im,
-      Complex.sub_re, Complex.sub_im, mul_zero, sub_self, mul_one]
-    ring
+      - (∫ x : ℝ in a..b, (1 : ℂ) / (x + T * Complex.I)) =
+        2 * Complex.I * (arctan (b / T) - arctan (a / T)) :=
+  Complex.horiz_diff_one_div hT hab
 
 open Real in
-/-- Boundary integral of `1/s` over a rectangle containing `0`: `2πi`. -/
 theorem boundary_rect_one_div {a b T : ℝ} (ha : a < 0) (hb : 0 < b) (hT : 0 < T) :
     (∫ x : ℝ in a..b, (1 : ℂ) / (x + -T * Complex.I))
       - (∫ x : ℝ in a..b, (1 : ℂ) / (x + T * Complex.I))
       + Complex.I * ((∫ y : ℝ in (-T)..T, (1 : ℂ) / (b + y * Complex.I))
-        - (∫ y : ℝ in (-T)..T, (1 : ℂ) / (a + y * Complex.I)))
-      = 2 * Real.pi * Complex.I := by
-  have hab : a ≤ b := le_of_lt (lt_trans ha hb)
-  have hbt : 0 < b / T := div_pos hb hT
-  have hat : a / T < 0 := div_neg_of_neg_of_pos ha hT
-  rw [horiz_diff_one_div (ne_of_gt hT) hab,
-    vertical_side_one_div (ne_of_gt hb) hT.le,
-    vertical_side_one_div (ne_of_lt ha) hT.le,
-    show T / b = (b / T)⁻¹ by rw [inv_div],
-    show T / a = (a / T)⁻¹ by rw [inv_div],
-    arctan_inv_of_pos hbt, arctan_inv_of_neg hat]
-  push_cast
-  ring
+        - (∫ y : ℝ in (-T)..T, (1 : ℂ) / (a + y * Complex.I))) =
+        2 * Real.pi * Complex.I :=
+  Complex.boundary_rect_one_div ha hb hT
+
+open Real in
+theorem boundary_rect_one_div_outside {a b T : ℝ} (ha : 0 < a) (hab : a ≤ b)
+    (hT : 0 < T) :
+    (∫ x : ℝ in a..b, (1 : ℂ) / (x + -T * Complex.I))
+      - (∫ x : ℝ in a..b, (1 : ℂ) / (x + T * Complex.I))
+      + Complex.I * ((∫ y : ℝ in (-T)..T, (1 : ℂ) / (b + y * Complex.I))
+        - (∫ y : ℝ in (-T)..T, (1 : ℂ) / (a + y * Complex.I))) = 0 :=
+  Complex.boundary_rect_one_div_outside ha hab hT
 
 /-- `exp w - 1 = w * ∫_0^1 exp (t * w)`, by FTC. -/
 theorem exp_sub_one_eq (w : ℂ) :
@@ -509,26 +332,6 @@ theorem perronRemainder_slope {y : ℝ} {h : ℂ} (hh : h ≠ 0) :
   simp_rw [hfac, intervalIntegral.integral_const_mul]
   field_simp
 
-open Real in
-/-- Rectangle boundary of `1/s` with the pole outside (`0 < a`): vanishes. -/
-theorem boundary_rect_one_div_outside {a b T : ℝ} (ha : 0 < a) (hab : a ≤ b)
-    (hT : 0 < T) :
-    (∫ x : ℝ in a..b, (1 : ℂ) / (x + -T * Complex.I))
-      - (∫ x : ℝ in a..b, (1 : ℂ) / (x + T * Complex.I))
-      + Complex.I * ((∫ y : ℝ in (-T)..T, (1 : ℂ) / (b + y * Complex.I))
-        - (∫ y : ℝ in (-T)..T, (1 : ℂ) / (a + y * Complex.I)))
-      = 0 := by
-  have hb : 0 < b := lt_of_lt_of_le ha hab
-  have hbt : 0 < b / T := div_pos hb hT
-  have hat : 0 < a / T := div_pos ha hT
-  rw [horiz_diff_one_div (ne_of_gt hT) hab,
-    vertical_side_one_div (ne_of_gt hb) hT.le,
-    vertical_side_one_div (ne_of_gt ha) hT.le,
-    show T / b = (b / T)⁻¹ by rw [inv_div],
-    show T / a = (a / T)⁻¹ by rw [inv_div],
-    arctan_inv_of_pos hbt, arctan_inv_of_pos hat]
-  push_cast
-  ring
 
 /-- Norm of a positive real base to a complex power. -/
 theorem norm_cpow_ofReal {y : ℝ} (hy : 0 < y) (s : ℂ) :

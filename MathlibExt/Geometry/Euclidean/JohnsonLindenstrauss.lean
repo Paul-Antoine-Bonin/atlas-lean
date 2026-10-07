@@ -17,45 +17,15 @@ import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.Positivity
 import Mathlib.Tactic.Ring
 import Mathlib.Topology.UniformSpace.Uniformizable
+import MathlibExt.Probability.Distributions.ChiSquare
 
 @[expose] public section
 
 open scoped RealInnerProductSpace
 open ProbabilityTheory MeasureTheory
 
-private theorem mgf_sq_stdGaussian (t : ℝ) :
-    mgf (fun x : ℝ => x ^ 2) (gaussianReal 0 1) t =
-      (Real.sqrt (1 - 2 * t))⁻¹ := by
-  rw [mgf, integral_gaussianReal_eq_integral_smul (by norm_num : (1 : NNReal) ≠ 0)]
-  simp only [smul_eq_mul, gaussianPDFReal, NNReal.coe_one, mul_one, sub_zero]
-  calc
-    (∫ x : ℝ, (√(2 * Real.pi))⁻¹ * Real.exp (-x ^ 2 / 2) *
-        Real.exp (t * x ^ 2)) =
-        (√(2 * Real.pi))⁻¹ *
-          ∫ x : ℝ, Real.exp (-((1 - 2 * t) / 2) * x ^ 2) := by
-      rw [← integral_const_mul]
-      congr 1
-      funext x
-      rw [mul_assoc, ← Real.exp_add]
-      congr 1
-      ring_nf
-    _ = (Real.sqrt (1 - 2 * t))⁻¹ := by
-      rw [integral_gaussian]
-      by_cases h : 0 < 1 - 2 * t
-      · rw [Real.sqrt_div (by positivity : 0 ≤ Real.pi)]
-        rw [Real.sqrt_mul (by positivity : 0 ≤ (2 : ℝ))]
-        rw [Real.sqrt_div h.le]
-        have htwo : Real.sqrt 2 ≠ 0 := by positivity
-        have hpi : Real.sqrt Real.pi ≠ 0 := by positivity
-        have hone : Real.sqrt (1 - 2 * t) ≠ 0 := by positivity
-        field_simp
-      · have hb : (1 - 2 * t) / 2 ≤ 0 := by linarith
-        have hs : Real.sqrt (1 - 2 * t) = 0 :=
-          Real.sqrt_eq_zero_of_nonpos (le_of_not_gt h)
-        have hq : Real.pi / ((1 - 2 * t) / 2) ≤ 0 :=
-          div_nonpos_of_nonneg_of_nonpos Real.pi_pos.le hb
-        rw [Real.sqrt_eq_zero_of_nonpos hq, hs]
-        simp
+-- `mgf_sq_stdGaussian` and `integrable_exp_mul_sq_stdGaussian` now live in
+-- `MathlibExt.Probability.Distributions.ChiSquare` and are reused below.
 
 private theorem mgf_sum_sq_pi (d : ℕ) (t : ℝ) :
     mgf (fun ω : Fin d → ℝ => ∑ i, (ω i) ^ 2)
@@ -86,20 +56,6 @@ private theorem mgf_sum_sq_pi (d : ℕ) (t : ℝ) :
               (HasLaw.id : HasLaw id (gaussianReal 0 1) (gaussianReal 0 1))).comp
                 (by fun_prop : Measurable (fun x : ℝ => x ^ 2))
     _ = (Real.sqrt (1 - 2 * t))⁻¹ ^ d := by simp
-
-private theorem integrable_exp_mul_sq_stdGaussian {t : ℝ} (ht : t < 1 / 2) :
-    Integrable (fun x : ℝ => Real.exp (t * x ^ 2)) (gaussianReal 0 1) := by
-  rw [gaussianReal_of_var_ne_zero 0 (by norm_num : (1 : NNReal) ≠ 0)]
-  rw [integrable_withDensity_iff_integrable_smul'
-    (measurable_gaussianPDF 0 1) (ae_of_all _ fun _ => gaussianPDF_lt_top)]
-  simp only [toReal_gaussianPDF, smul_eq_mul, gaussianPDFReal,
-    NNReal.coe_one, mul_one, sub_zero]
-  have hb : 0 < (1 / 2 : ℝ) - t := by linarith
-  convert (integrable_exp_neg_mul_sq hb).const_mul (Real.sqrt (2 * Real.pi))⁻¹ using 1
-  funext x
-  rw [mul_assoc, ← Real.exp_add]
-  congr 1
-  ring_nf
 
 private theorem integrable_exp_mul_sum_sq_pi (d : ℕ) {t : ℝ} (ht : t < 1 / 2) :
     Integrable (fun ω : Fin d → ℝ =>
