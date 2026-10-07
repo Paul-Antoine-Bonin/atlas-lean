@@ -61,6 +61,7 @@ if [[ "$scope" == all || "$scope" == preflight ]]; then
       scripts/check_health.sh scripts/test_scripts.sh
   run_check "maintenance script regressions" scripts/test_scripts.sh
   run_check "library policy" scripts/check_health.sh
+  run_check "copyright headers" python3 scripts/check_copyright.py --all
 fi
 
 if [[ "$scope" == all || "$scope" == build ]]; then

@@ -285,7 +285,11 @@ grep -q '^def x : Nat := 1$' "$COPY/None.lean" || fail "--fix changed the file b
 if check_copyright --base HEAD~1; then fail "--base passed a new file without a header"; fi
 grep -q 'New.lean' "$TMP_ROOT/output.log" || fail "--base did not report the new file"
 if grep -q 'Doc.lean' "$TMP_ROOT/output.log"; then fail "--base checked an unchanged file"; fi
-grep -q 'scripts/check_copyright.py --base' "$REPO_ROOT/.github/workflows/ci.yml" ||
-  fail "CI does not run the copyright check on pull requests"
+if check_copyright --all; then fail "--all passed a repository with a file without a header"; fi
+grep -q 'New.lean' "$TMP_ROOT/output.log" || fail "--all did not report the file without a header"
+(cd "$COPY" && git rm -q --cached Doc.lean New.lean && rm -f Doc.lean New.lean)
+check_copyright --all || { cat "$TMP_ROOT/output.log" >&2; fail "--all rejected a repository whose files all have headers"; }
+grep -q 'check_copyright.py --all' "$REPO_ROOT/scripts/check.sh" ||
+  fail "preflight does not check every file's copyright header"
 
 echo "ok [scripts]: repository policy regression tests passed."
