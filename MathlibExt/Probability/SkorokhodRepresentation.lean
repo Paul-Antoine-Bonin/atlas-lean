@@ -8,8 +8,7 @@ LICENSE file in the root directory of this source tree.
 
 module
 
-public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
-public import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
+public import MathlibExt.Probability.Quantile
 import Mathlib.Algebra.Order.Ring.Star
 import Mathlib.Algebra.Order.Star.Real
 import Mathlib.Analysis.LocallyConvex.AbsConvexOpen
@@ -24,6 +23,7 @@ import Mathlib.Topology.UniformSpace.Uniformizable
 
 section
 open MeasureTheory
+open ProbabilityTheory
 open scoped ENNReal NNReal
 
 namespace MathlibExt.Probability.SkorokhodRepresentationWanted
@@ -34,169 +34,6 @@ namespace MathlibExt.Probability.SkorokhodRepresentationWanted
 Wishlist coupling weak convergence of Borel probability measures on a Polish space
 to almost-sure convergence of random variables on `[0,1]`.
 -/
-
-private noncomputable def cdfQuantile (ν : Measure ℝ) (u : ℝ) : ℝ :=
-  if u ∈ Set.Ioo (0 : ℝ) (1 : ℝ) then sInf {t : ℝ | u ≤ ProbabilityTheory.cdf ν t} else 0
-
-private theorem cdfQuantile_set_nonempty (ν : Measure ℝ) {u : ℝ}
-    (hu : u ∈ Set.Ioo (0 : ℝ) (1 : ℝ)) :
-    {t : ℝ | u ≤ ProbabilityTheory.cdf ν t}.Nonempty := by
-  obtain ⟨hu0, hu1⟩ := hu
-  have hev : ∀ᶠ t in Filter.atTop, u < ProbabilityTheory.cdf ν t :=
-    Filter.Tendsto.eventually_const_lt hu1 (ProbabilityTheory.tendsto_cdf_atTop ν)
-  obtain ⟨t, ht⟩ := hev.exists
-  exact ⟨t, le_of_lt ht⟩
-
-private theorem cdfQuantile_set_bddBelow (ν : Measure ℝ) {u : ℝ}
-    (hu : u ∈ Set.Ioo (0 : ℝ) (1 : ℝ)) :
-    BddBelow {t : ℝ | u ≤ ProbabilityTheory.cdf ν t} := by
-  obtain ⟨hu0, _⟩ := hu
-  have hev : ∀ᶠ t in Filter.atBot, ProbabilityTheory.cdf ν t < u :=
-    Filter.Tendsto.eventually_lt_const hu0 (ProbabilityTheory.tendsto_cdf_atBot ν)
-  rw [Filter.eventually_atBot] at hev
-  obtain ⟨t₀, ht₀⟩ := hev
-  refine ⟨t₀, fun t ht => ?_⟩
-  simp only [Set.mem_ofPred_eq] at ht
-  by_contra hlt
-  simp only [not_le] at hlt
-  have hcon : ProbabilityTheory.cdf ν t < u := ht₀ t (le_of_lt hlt)
-  exact absurd hcon (not_lt_of_ge ht)
-
-private theorem cdfQuantile_mem (ν : Measure ℝ) {u : ℝ} (hu : u ∈ Set.Ioo (0 : ℝ) (1 : ℝ)) :
-    sInf {t : ℝ | u ≤ ProbabilityTheory.cdf ν t} ∈ {t : ℝ | u ≤ ProbabilityTheory.cdf ν t} := by
-  have hne := cdfQuantile_set_nonempty ν hu
-  have habove : ∀ t : ℝ, sInf {t : ℝ | u ≤ ProbabilityTheory.cdf ν t} < t →
-      t ∈ {t : ℝ | u ≤ ProbabilityTheory.cdf ν t} := by
-    intro t ht
-    obtain ⟨s, hs, hst⟩ := exists_lt_of_csInf_lt hne ht
-    simp only [Set.mem_ofPred_eq] at hs ⊢
-    exact le_trans hs (ProbabilityTheory.monotone_cdf ν (le_of_lt hst))
-  have hrc : Filter.Tendsto (fun t => ProbabilityTheory.cdf ν t)
-      (nhdsWithin (sInf {t : ℝ | u ≤ ProbabilityTheory.cdf ν t})
-        (Set.Ioi (sInf {t : ℝ | u ≤ ProbabilityTheory.cdf ν t})))
-      (nhds (ProbabilityTheory.cdf ν (sInf {t : ℝ | u ≤ ProbabilityTheory.cdf ν t}))) := by
-    have h := (ProbabilityTheory.cdf ν).right_continuous
-      (sInf {t : ℝ | u ≤ ProbabilityTheory.cdf ν t})
-    have hmono : nhdsWithin (sInf {t : ℝ | u ≤ ProbabilityTheory.cdf ν t})
-          (Set.Ioi (sInf {t : ℝ | u ≤ ProbabilityTheory.cdf ν t})) ≤
-        nhdsWithin (sInf {t : ℝ | u ≤ ProbabilityTheory.cdf ν t})
-          (Set.Ici (sInf {t : ℝ | u ≤ ProbabilityTheory.cdf ν t})) :=
-      nhdsWithin_mono _ Set.Ioi_subset_Ici_self
-    exact Filter.Tendsto.mono_left h hmono
-  have hev : ∀ᶠ t in nhdsWithin (sInf {t : ℝ | u ≤ ProbabilityTheory.cdf ν t})
-      (Set.Ioi (sInf {t : ℝ | u ≤ ProbabilityTheory.cdf ν t})),
-      u ≤ ProbabilityTheory.cdf ν t := by
-    filter_upwards [self_mem_nhdsWithin] with t ht
-    simp only [Set.mem_Ioi] at ht
-    have hmem := habove t ht
-    simp only [Set.mem_ofPred_eq] at hmem
-    exact hmem
-  have hle : u ≤ ProbabilityTheory.cdf ν
-      (sInf {t : ℝ | u ≤ ProbabilityTheory.cdf ν t}) := ge_of_tendsto hrc hev
-  exact hle
-
-private theorem cdfQuantile_le_iff (ν : Measure ℝ) {u : ℝ} (hu : u ∈ Set.Ioo (0 : ℝ) (1 : ℝ))
-    {t : ℝ} : cdfQuantile ν u ≤ t ↔ u ≤ ProbabilityTheory.cdf ν t := by
-  have hmem := cdfQuantile_mem ν hu
-  have hbdd := cdfQuantile_set_bddBelow ν hu
-  simp only [cdfQuantile, hu, ite_true]
-  constructor
-  · intro hle
-    exact le_trans hmem (ProbabilityTheory.monotone_cdf ν hle)
-  · intro hle
-    exact csInf_le hbdd hle
-
-private theorem cdfQuantile_monoOn (ν : Measure ℝ) : MonotoneOn (cdfQuantile ν) (Set.Ioo 0 1) := by
-  intro u hu v hv huv
-  have h1 : v ≤ ProbabilityTheory.cdf ν (cdfQuantile ν v) :=
-    (cdfQuantile_le_iff ν hv).mp le_rfl
-  have h2 : u ≤ ProbabilityTheory.cdf ν (cdfQuantile ν v) := le_trans huv h1
-  exact (cdfQuantile_le_iff ν hu).mpr h2
-
-private theorem cdfQuantile_measurable (ν : Measure ℝ) : Measurable (cdfQuantile ν) := by
-  apply measurable_of_Iic
-  intro t
-  have hset : cdfQuantile ν ⁻¹' (Set.Iic t) =
-      (Set.Ioo (0:ℝ) 1 ∩ Set.Iic (ProbabilityTheory.cdf ν t)) ∪
-      (if (0:ℝ) ≤ t then (Set.Ioo (0:ℝ) 1)ᶜ else ∅) := by
-    ext u
-    by_cases hu : u ∈ Set.Ioo (0:ℝ) 1
-    · by_cases ht : (0:ℝ) ≤ t
-      · simp only [Set.mem_preimage, Set.mem_Iic, Set.mem_union, Set.mem_inter_iff,
-          ht, ite_true]
-        rw [cdfQuantile_le_iff ν hu]
-        simp [hu]
-      · simp only [Set.mem_preimage, Set.mem_Iic, Set.mem_union, Set.mem_inter_iff,
-          ht, ite_false, Set.mem_empty_iff_false, or_false]
-        rw [cdfQuantile_le_iff ν hu]
-        exact ⟨fun h => ⟨hu, h⟩, fun h => h.2⟩
-    · have hQ0 : cdfQuantile ν u = 0 := by
-        simp only [cdfQuantile, hu, ite_false]
-      by_cases ht : (0:ℝ) ≤ t
-      · simp only [Set.mem_preimage, Set.mem_Iic, hQ0, Set.mem_union,
-          Set.mem_inter_iff]
-        simp [hu, ht]
-      · simp only [Set.mem_preimage, Set.mem_Iic, hQ0, Set.mem_union, Set.mem_inter_iff,
-          ht, ite_false, Set.mem_empty_iff_false, or_false]
-        exact (iff_false_intro (fun h => hu h.1)).symm
-  rw [hset]
-  apply MeasurableSet.union
-  · exact (measurableSet_Ioo).inter measurableSet_Iic
-  · by_cases ht : (0:ℝ) ≤ t
-    · simp only [ht, ite_true]; exact measurableSet_Ioo.compl
-    · simp only [ht, ite_false]; exact MeasurableSet.empty
-
-private theorem map_cdfQuantile_restrict_Icc (ν : Measure ℝ) [IsProbabilityMeasure ν] :
-    Measure.map (cdfQuantile ν) (volume.restrict (Set.Icc (0:ℝ) 1)) = ν := by
-  have hIoo : volume.restrict (Set.Ioo (0:ℝ) 1) = volume.restrict (Set.Icc (0:ℝ) 1) :=
-    Measure.restrict_congr_set Ioo_ae_eq_Icc
-  apply Eq.symm
-  rw [← hIoo]
-  apply Measure.ext_of_Iic _ _ (fun t => ?_)
-  rw [Measure.map_apply (cdfQuantile_measurable ν) measurableSet_Iic,
-    Measure.restrict_apply ((cdfQuantile_measurable ν) measurableSet_Iic)]
-  have hpre : cdfQuantile ν ⁻¹' (Set.Iic t) ∩ Set.Ioo (0:ℝ) 1 =
-      Set.Ioo (0:ℝ) 1 ∩ Set.Iic (ProbabilityTheory.cdf ν t) := by
-    ext u
-    simp only [Set.mem_inter_iff, Set.mem_preimage, Set.mem_Iic]
-    constructor
-    · intro h
-      obtain ⟨hle, hu⟩ := h
-      exact ⟨hu, (cdfQuantile_le_iff ν hu).mp hle⟩
-    · intro h
-      obtain ⟨hu, hle⟩ := h
-      exact ⟨(cdfQuantile_le_iff ν hu).mpr hle, hu⟩
-  rw [hpre, Set.inter_comm]
-  set c := ProbabilityTheory.cdf ν t with hc
-  have hc0 : 0 ≤ c := ProbabilityTheory.cdf_nonneg ν t
-  have hc1 : c ≤ 1 := ProbabilityTheory.cdf_le_one ν t
-  rw [← ProbabilityTheory.ofReal_cdf ν t]
-  by_cases hclt : c < 1
-  · have hset : Set.Iic c ∩ Set.Ioo (0:ℝ) 1 = Set.Ioc 0 c := by
-      ext u
-      simp only [Set.mem_inter_iff, Set.mem_Iic, Set.mem_Ioo, Set.mem_Ioc]
-      constructor
-      · intro h
-        obtain ⟨huct, hu0, hu1⟩ := h
-        exact ⟨hu0, huct⟩
-      · intro h
-        obtain ⟨hu0, huc⟩ := h
-        exact ⟨huc, hu0, lt_of_le_of_lt huc hclt⟩
-    rw [hset, Real.volume_Ioc]
-    congr 1
-    ring
-  · have hceq : c = 1 := le_antisymm hc1 (le_of_not_gt hclt)
-    have hset : Set.Iic c ∩ Set.Ioo (0:ℝ) 1 = Set.Ioo (0:ℝ) 1 := by
-      rw [hceq]
-      ext u
-      simp only [Set.mem_inter_iff, Set.mem_Iic, Set.mem_Ioo]
-      constructor
-      · intro h; exact h.2
-      · intro h
-        obtain ⟨hu0, hu1⟩ := h
-        exact ⟨le_of_lt hu1, hu0, hu1⟩
-    rw [hset, Real.volume_Ioo, ← hc, hceq]
-    norm_num
 
 private theorem exists_null_singleton_mem_Ioo {ν : Measure ℝ} [SFinite ν]
     {a b : ℝ} (hab : a < b) : ∃ t, a < t ∧ t < b ∧ ν {t} = 0 := by
@@ -234,7 +71,7 @@ private theorem tendsto_cdfQuantile_of_continuousAt
     obtain ⟨t, hat, htQ, htnull⟩ := exists_null_singleton_mem_Ioo (ν := ν₀) ha
     have hFlt : ProbabilityTheory.cdf ν₀ t < u := by
       have h : ¬ (u ≤ ProbabilityTheory.cdf ν₀ t) :=
-        (Iff.not (cdfQuantile_le_iff ν₀ (t := t) hu)).mp (not_le_of_gt htQ)
+        (Iff.not (cdfQuantile_le_iff ν₀ (x := t) hu)).mp (not_le_of_gt htQ)
       exact lt_of_not_ge h
     have hev : ∀ᶠ n in Filter.atTop, ProbabilityTheory.cdf (ν n) t < u :=
       Filter.Tendsto.eventually_lt_const hFlt (hconv t htnull)
@@ -631,15 +468,15 @@ theorem skorokhod_representation
     intro t ht
     exact tendsto_cdf_map_of_null_atom μ μ₀ hμ Φ hΦmeas hdiscont t ht
   have hmeas : ∀ n, Measurable (Y n) := fun n =>
-    hΨmeas.comp (cdfQuantile_measurable (ν n))
-  have hmeas0 : Measurable Y₀ := hΨmeas.comp (cdfQuantile_measurable ν₀)
+    hΨmeas.comp (measurable_cdfQuantile (ν n))
+  have hmeas0 : Measurable Y₀ := hΨmeas.comp (measurable_cdfQuantile ν₀)
   have hlaw : ∀ n, Measure.map (Y n) lam = (μ n : Measure X) := by
     intro n
     have h1 : Measure.map (cdfQuantile (ν n)) lam = ν n :=
       map_cdfQuantile_restrict_Icc (ν n)
     have h2 : Measure.map Ψ (Measure.map (cdfQuantile (ν n)) lam) =
         Measure.map (Ψ ∘ cdfQuantile (ν n)) lam :=
-      MeasureTheory.Measure.map_map hΨmeas (cdfQuantile_measurable (ν n))
+      MeasureTheory.Measure.map_map hΨmeas (measurable_cdfQuantile (ν n))
     have h3 : Measure.map Ψ (ν n) = (μ n : Measure X) := by
       have hmap : Measure.map Ψ (Measure.map Φ (μ n : Measure X)) =
           Measure.map (Ψ ∘ Φ) (μ n : Measure X) :=
@@ -655,7 +492,7 @@ theorem skorokhod_representation
       map_cdfQuantile_restrict_Icc ν₀
     have h2 : Measure.map Ψ (Measure.map (cdfQuantile ν₀) lam) =
         Measure.map (Ψ ∘ cdfQuantile ν₀) lam :=
-      MeasureTheory.Measure.map_map hΨmeas (cdfQuantile_measurable ν₀)
+      MeasureTheory.Measure.map_map hΨmeas (measurable_cdfQuantile ν₀)
     have h3 : Measure.map Ψ ν₀ = (μ₀ : Measure X) := by
       have hmap : Measure.map Ψ (Measure.map Φ (μ₀ : Measure X)) =
           Measure.map (Ψ ∘ Φ) (μ₀ : Measure X) :=
@@ -675,7 +512,7 @@ theorem skorokhod_representation
     have h11 : ν n = Measure.map (cdfQuantile (ν n)) lam :=
       (map_cdfQuantile_restrict_Icc (ν n)).symm
     rw [h11, ae_map_iff
-      (Measurable.aemeasurable (cdfQuantile_measurable (ν n))) hemb.measurableSet_range] at h1'
+      (Measurable.aemeasurable (measurable_cdfQuantile (ν n))) hemb.measurableSet_range] at h1'
     exact h1'
   have hrange0 : ∀ᵐ u ∂lam, ∃ z, Φ z = cdfQuantile ν₀ u := by
     have h1 : ∀ᵐ y ∂(Measure.map Φ (μ₀ : Measure X)), ∃ x, Φ x = y := by
@@ -685,7 +522,7 @@ theorem skorokhod_representation
     have h11 : ν₀ = Measure.map (cdfQuantile ν₀) lam :=
       (map_cdfQuantile_restrict_Icc ν₀).symm
     rw [h11, ae_map_iff
-      (Measurable.aemeasurable (cdfQuantile_measurable ν₀)) hemb.measurableSet_range] at h1'
+      (Measurable.aemeasurable (measurable_cdfQuantile ν₀)) hemb.measurableSet_range] at h1'
     exact h1'
   have haeQ : ∀ᵐ u ∂lam, Filter.Tendsto (fun n => cdfQuantile (ν n) u) Filter.atTop
       (nhds (cdfQuantile ν₀ u)) :=
