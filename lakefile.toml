@@ -17,12 +17,17 @@ name = "mathlib"
 scope = "leanprover-community"
 rev = "v4.34.1"
 
+[[require]]
+name = "cslib"
+scope = "leanprover"
+rev = "v4.34.1"
+
 # Reusable, proved mathematics that extends Mathlib.
 [[lean_lib]]
 name = "MathlibExt"
 globs = ["MathlibExt.+"]
 
-# Reusable, proved computer-science developments built on MathlibExt.
+# Reusable, proved computer-science developments extending CSLib.
 [[lean_lib]]
 name = "CSLibExt"
 globs = ["CSLibExt.+"]
