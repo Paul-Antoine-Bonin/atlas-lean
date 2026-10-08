@@ -1,7 +1,9 @@
 /-
-Copyright (c) 2026 Paul-Antoine Bonin. All rights reserved.
-Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Paul-Antoine Bonin
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
 -/
 import Mathlib.Probability.StrongLaw
 import Mathlib.Probability.CentralLimitTheorem

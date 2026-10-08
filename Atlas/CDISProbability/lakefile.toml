@@ -7,6 +7,7 @@ defaultTargets = ["Code"]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
 relaxedAutoImplicit = false
 weak.linter.mathlibStandardSet = true
+weak.linter.style.header = false # Files carry the Meta header, not the Mathlib one.
 maxSynthPendingDepth = 3
 
 [[require]]
