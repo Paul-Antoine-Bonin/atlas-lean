@@ -1,0 +1,36 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+public import MathlibExt.NumberTheory.PellLucasSequence
+
+@[expose] public section
+
+namespace MetaMathlibExt
+
+example : pellLucasSequence 0 = 1 := pellLucasSequence_zero
+example : pellLucasSequence 1 = 1 := pellLucasSequence_one
+example : pellLucasSequence 2 = 3 := rfl
+example : pellLucasSequence 3 = 7 := rfl
+example : pellLucasSequence 4 = 17 := rfl
+example : pellLucasSequence 5 = 41 := rfl
+
+example (n : ℕ) :
+    pellLucasSequence (n + 2) =
+      2 * pellLucasSequence (n + 1) + pellLucasSequence n :=
+  pellLucasSequence_succ_succ n
+
+#print axioms MetaMathlibExt.pellLucasSequence
+#print axioms MetaMathlibExt.pellLucasSequence_zero
+#print axioms MetaMathlibExt.pellLucasSequence_one
+#print axioms MetaMathlibExt.pellLucasSequence_succ_succ
+
+end MetaMathlibExt
+
+end

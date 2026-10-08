@@ -1,0 +1,24 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+import MathlibExt.Combinatorics.SimpleGraph.LongestCycle
+
+namespace SimpleGraph.Walk
+
+example {V : Type*} {G : SimpleGraph V} {v : V} (p : G.Walk v v) :
+    p.IsLongestCycle ↔
+      p.IsCycle ∧ ∀ (w : V) (q : G.Walk w w), q.IsCycle → q.length ≤ p.length :=
+  Iff.rfl
+
+example {V : Type*} {G : SimpleGraph V} {v : V} {p : G.Walk v v}
+    (hp : p.IsLongestCycle) : p.IsCycle :=
+  hp.1
+
+end SimpleGraph.Walk

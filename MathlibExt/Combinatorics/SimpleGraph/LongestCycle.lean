@@ -1,0 +1,29 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+public import Mathlib.Combinatorics.SimpleGraph.Paths
+
+/-!
+# Longest cycles in simple graphs
+
+This file provides the predicate that a closed walk is a cycle of maximum
+length among all cycles in the same graph.
+-/
+
+@[expose] public section
+
+namespace SimpleGraph.Walk
+
+/-- A cycle is globally longest if no cycle in the graph has more edges. -/
+public def IsLongestCycle {V : Type*} {G : SimpleGraph V} {v : V}
+    (p : G.Walk v v) : Prop :=
+  p.IsCycle ∧ ∀ (w : V) (q : G.Walk w w), q.IsCycle → q.length ≤ p.length
+
+end SimpleGraph.Walk

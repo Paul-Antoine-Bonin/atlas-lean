@@ -1,0 +1,99 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+import Mathlib.Tactic.FinCases
+import MathlibExt.NumberTheory.MultipleZeta.Reversal
+
+/-!
+Tests for `MathlibExt.NumberTheory.MultipleZeta.Reversal`.
+-/
+
+namespace MetaMathlibExt.MultipleZeta
+
+private def oneEntryIndex : Index :=
+  ⟨2, ⟨[2], by simp, by simp⟩⟩
+
+private def twoEntryIndex : Index :=
+  ⟨3, ⟨[1, 2], by simp, by simp⟩⟩
+
+private theorem oneEntryIndex_admissible :
+    oneEntryIndex.IsIncreasingAdmissible := by
+  simp [Index.IsIncreasingAdmissible, IsAdmissible, Index.entries,
+    oneEntryIndex]
+
+private theorem twoEntryIndex_admissible :
+    twoEntryIndex.IsIncreasingAdmissible := by
+  simp [Index.IsIncreasingAdmissible, IsAdmissible, Index.entries,
+    twoEntryIndex]
+
+private def increasingTupleTwo : StrictIncreasingTuple 2 :=
+  ⟨![⟨1, by decide⟩, ⟨2, by decide⟩], by
+    intro i j hij
+    fin_cases i <;> fin_cases j <;> simp_all⟩
+
+example : oneEntryIndex.reverse.entries = [2] := by
+  rfl
+
+example : twoEntryIndex.reverse.entries = [2, 1] := by
+  rfl
+
+example : (twoEntryIndex.reverse.entry ⟨0, by decide⟩ : ℕ) = 2 := by
+  rfl
+
+example : (twoEntryIndex.reverse.entry ⟨1, by decide⟩ : ℕ) = 1 := by
+  rfl
+
+example :
+    ((increasingEquivDecreasing twoEntryIndex increasingTupleTwo).1
+        ⟨0, by decide⟩ : ℕ) = 2 := by
+  rfl
+
+example :
+    ((increasingEquivDecreasing twoEntryIndex increasingTupleTwo).1
+        ⟨1, by decide⟩ : ℕ) = 1 := by
+  rfl
+
+example : oneEntryIndex.reverse.reverse = oneEntryIndex := by
+  simp
+
+example : twoEntryIndex.reverse.reverse = twoEntryIndex := by
+  simp
+
+example (m : StrictIncreasingTuple oneEntryIndex.depth) :
+    increasingSummand oneEntryIndex m =
+      strictSummand oneEntryIndex.reverse
+        (increasingEquivDecreasing oneEntryIndex m) :=
+  increasingSummand_eq_strictSummand_reverse oneEntryIndex m
+
+example (m : StrictIncreasingTuple twoEntryIndex.depth) :
+    increasingSummand twoEntryIndex m =
+      strictSummand twoEntryIndex.reverse
+        (increasingEquivDecreasing twoEntryIndex m) :=
+  increasingSummand_eq_strictSummand_reverse twoEntryIndex m
+
+example :
+    increasingValue oneEntryIndex oneEntryIndex_admissible =
+      strictValue oneEntryIndex.reverse
+        (Or.inl
+          (oneEntryIndex.isIncreasingAdmissible_iff_reverse_isAdmissible.mp
+            oneEntryIndex_admissible)) :=
+  increasingValue_eq_strictValue_reverse oneEntryIndex
+    oneEntryIndex_admissible
+
+example :
+    increasingValue twoEntryIndex twoEntryIndex_admissible =
+      strictValue twoEntryIndex.reverse
+        (Or.inl
+          (twoEntryIndex.isIncreasingAdmissible_iff_reverse_isAdmissible.mp
+            twoEntryIndex_admissible)) :=
+  increasingValue_eq_strictValue_reverse twoEntryIndex
+    twoEntryIndex_admissible
+
+end MetaMathlibExt.MultipleZeta

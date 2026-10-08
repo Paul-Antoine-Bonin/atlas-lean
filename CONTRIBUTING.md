@@ -35,6 +35,43 @@ outlined on that page and do not file a public issue.
 * 80 character line length
 * ...
 
+## Copyright headers
+Every Lean file starts with the Meta header:
+
+```lean
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+```
+
+Code from another project keeps that project's copyright notice:
+
+* A file that is mostly copied from another project starts with that project's
+  copyright and license header instead (for example, the Apache 2.0 header of
+  Formal Conjectures, or the header of the Mathlib file it copies).
+* A mostly original file that adapts code from another project keeps the Meta
+  header and adds a second block naming each source file, its copyright holder,
+  license and authors, for the adapted portions only:
+
+```lean
+/-
+Portions of this file are adapted from:
+
+`Mathlib/Analysis/SpecialFunctions/Log/Deriv.lean` (Mathlib):
+Copyright (c) 2018 Chris Hughes. All rights reserved.
+Licensed under the Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+Authors: Chris Hughes, Abhimanyu Pallavi Sudhir, Jean Lo, Calle Sönne
+-/
+```
+
+CI checks every tracked Lean file with `scripts/check_copyright.py --all` (part of
+`scripts/check.sh preflight`); `scripts/check_copyright.py --fix FILE...` adds the
+Meta header to files that have none.
+
 ## License
 By contributing to ATLAS, you agree that your contributions will be licensed
 under the LICENSE file in the root directory of this source tree.

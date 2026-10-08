@@ -1,0 +1,31 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+import MathlibExt.Analysis.SpecialFunctions.ArcsinTaylorSeries
+
+namespace MathlibExtTest.Analysis.SpecialFunctions.ArcsinTaylorSeries
+
+open MathlibExt.Analysis.SpecialFunctions.ArcsinTaylorSeries
+
+example : centralBinomialCoeff 0 = 1 := by
+  norm_num [centralBinomialCoeff]
+
+example {y : ℝ} (hy : y ∈ Set.Ioo (-1 : ℝ) 1) :
+    arcsinSeries y = Real.arcsin y :=
+  arcsinSeries_eq_arcsin hy
+
+example : ContinuousOn arcsinIntegralSeries (Set.Icc (-1 : ℝ) 1) :=
+  continuousOn_arcsinIntegralSeries
+
+example {y : ℝ} (hy : ‖y‖ < 1) (hy0 : y ≠ 0) :
+    HasDerivAt arcsinIntegralSeries (Real.arcsin y / y) y :=
+  hasDerivAt_arcsinIntegralSeries hy hy0
+
+end MathlibExtTest.Analysis.SpecialFunctions.ArcsinTaylorSeries

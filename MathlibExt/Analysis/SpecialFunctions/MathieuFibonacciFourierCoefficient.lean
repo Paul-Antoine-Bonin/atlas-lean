@@ -1,0 +1,42 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+public import Mathlib.Analysis.SpecialFunctions.Gamma.Basic
+
+/-!
+# Fourier series coefficient
+
+Retained definition for concept `Fourier series coefficient`
+(`jis_sem_e469cc9709bc61c7d3368fdf`), required clause from statement
+`jis_730fbe152ebd86322427d06f`.
+-/
+
+namespace MetaMathlibExt
+
+@[expose] public section
+
+/-- Fourier cosine-series coefficient from the periodic Mathieu–Fibonacci example.
+
+For `n ≥ 1`, this is `(2 / Real.log ((1 + Real.sqrt 5) / 2)) *
+‖Complex.Gamma (1 + 2 * n * π * I / Real.log ((1 + Real.sqrt 5) / 2))‖ ^ 2`,
+where `Real.log ((1 + Real.sqrt 5) / 2)` is the fixed `log φ` of the source,
+so that the source periodic function is
+`H x = 1 + ∑' n : {n : ℕ // 1 ≤ n}, coeff n * Real.cos (4 * n * π * x / log φ)`.
+
+Concept `Fourier series coefficient` (`jis_sem_e469cc9709bc61c7d3368fdf`);
+required clause from statement `jis_730fbe152ebd86322427d06f`. -/
+public noncomputable def mathieuFibonacciFourierCoefficient (n : {n : ℕ // 1 ≤ n}) : ℝ :=
+  (2 / Real.log ((1 + Real.sqrt 5) / 2)) *
+    ‖Complex.Gamma (1 + 2 * (n.val : ℂ) * (Real.pi : ℂ) * Complex.I /
+      (Real.log ((1 + Real.sqrt 5) / 2) : ℂ))‖ ^ 2
+
+end
+
+end MetaMathlibExt

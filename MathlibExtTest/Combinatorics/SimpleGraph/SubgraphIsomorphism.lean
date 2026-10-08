@@ -1,0 +1,29 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+public import MathlibExt.Combinatorics.SimpleGraph.SubgraphIsomorphism
+
+@[expose] public section
+
+open SimpleGraph
+
+-- Normal API use: the unique-subgraph predicate and count accept graphs.
+noncomputable example (G H : SimpleGraph (Fin 4)) : Prop :=
+  IsUniqueSubgraph G H
+
+noncomputable example (H : SimpleGraph (Fin 4)) : ℕ :=
+  uniqueSubgraphCount H
+
+-- The empty graph is a unique subgraph of itself: it is the only
+-- spanning subgraph isomorphic to it.
+example : IsUniqueSubgraph (⊥ : SimpleGraph (Fin 4)) (⊥ : SimpleGraph (Fin 4)) := by
+  refine ⟨⊥, ⟨le_rfl, ⟨RelIso.refl _⟩⟩, fun G' hG' => ?_⟩
+  · obtain ⟨hle, -⟩ := hG'
+    exact le_antisymm hle bot_le

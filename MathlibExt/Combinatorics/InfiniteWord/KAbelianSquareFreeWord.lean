@@ -1,0 +1,69 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+public import Mathlib.Data.List.Basic
+
+namespace MetaMathlibExt
+
+@[expose] public section
+
+/-!
+# k-abelian square-free words
+
+Source: T. Huova and A. Saarela, *Strongly k-abelian repetitions*, Journal of Integer
+Sequences 16 (2013),
+[`huova2.tex`](https://cs.uwaterloo.ca/journals/JIS/VOL16/Huova/huova2.tex).
+-/
+
+/-- Number of overlapping occurrences of a nonempty factor `t` in `w`.
+The empty factor is assigned count zero. -/
+public def wordFactorCount {α : Type*} [DecidableEq α] (w t : List α) : ℕ :=
+  if t = [] then 0
+  else
+    match w with
+    | [] => 0
+    | _ :: ws => (if w.take t.length = t then 1 else 0) + wordFactorCount ws t
+
+/-- Two nonempty words are `k`-abelian equivalent when their prefixes and suffixes of
+length `k - 1` agree and every factor of length `k` occurs equally often. -/
+public def IsKAbelianEquivalent {α : Type*} [DecidableEq α]
+    (k : ℕ) (u v : List α) : Prop :=
+  1 ≤ k ∧ u ≠ [] ∧ v ≠ [] ∧
+    u.take (k - 1) = v.take (k - 1) ∧
+    u.drop (u.length - (k - 1)) = v.drop (v.length - (k - 1)) ∧
+    ∀ t : List α, t.length = k → wordFactorCount u t = wordFactorCount v t
+
+/-- A `k`-abelian square is a concatenation of two nonempty `k`-abelian equivalent words. -/
+public def IsKAbelianSquare {α : Type*} [DecidableEq α]
+    (k : ℕ) (w : List α) : Prop :=
+  ∃ u v : List α, w = u ++ v ∧ IsKAbelianEquivalent k u v
+
+/-- A finite word is `k`-abelian square-free when none of its contiguous factors is a
+`k`-abelian square. -/
+public def IsKAbelianSquareFree {α : Type*} [DecidableEq α]
+    (k : ℕ) (w : List α) : Prop :=
+  1 ≤ k ∧ ∀ pre factor suf : List α,
+    w = pre ++ factor ++ suf → ¬ IsKAbelianSquare k factor
+
+/-- Ternary specialization of `3`-abelian equivalence. -/
+public def IsThreeAbelianEquivalent (u v : List (Fin 3)) : Prop :=
+  IsKAbelianEquivalent 3 u v
+
+/-- Ternary specialization of a `3`-abelian square. -/
+public def IsThreeAbelianSquare (w : List (Fin 3)) : Prop :=
+  IsKAbelianSquare 3 w
+
+/-- Ternary specialization of `3`-abelian square-freeness. -/
+public def IsThreeAbelianSquareFree (w : List (Fin 3)) : Prop :=
+  IsKAbelianSquareFree 3 w
+
+end
+
+end MetaMathlibExt

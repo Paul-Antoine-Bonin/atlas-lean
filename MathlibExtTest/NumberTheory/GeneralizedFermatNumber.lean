@@ -1,0 +1,27 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+public import MathlibExt.NumberTheory.GeneralizedFermatNumber
+
+@[expose] public section
+
+example : MetaMathlibExt.generalizedFermatNumber 2 1 (by decide) (by decide) = 5 := rfl
+example : MetaMathlibExt.generalizedFermatNumber 4 2 (by decide) (by decide) = 257 := rfl
+
+example (b n : ℕ) (hb : Even b) (hn : 0 < n) :
+    MetaMathlibExt.generalizedFermatNumber b n hb hn = b ^ (2 ^ n) + 1 := rfl
+
+example (b n : ℕ) (hb₁ hb₂ : Even b) (hn₁ hn₂ : 0 < n) :
+    MetaMathlibExt.generalizedFermatNumber b n hb₁ hn₁ =
+      MetaMathlibExt.generalizedFermatNumber b n hb₂ hn₂ := rfl
+
+#print axioms MetaMathlibExt.generalizedFermatNumber
+
+end

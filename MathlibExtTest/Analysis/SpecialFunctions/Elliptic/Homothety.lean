@@ -1,0 +1,36 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+public import MathlibExt.Analysis.SpecialFunctions.Elliptic.Homothety
+
+@[expose] public section
+
+open scoped Pointwise
+
+namespace PeriodPair
+
+example (L : PeriodPair) : IsHomothetic L L :=
+  IsHomothetic.refl L
+
+example {L L' : PeriodPair} (h : IsHomothetic L L') : IsHomothetic L' L :=
+  h.symm
+
+example {L₁ L₂ L₃ : PeriodPair} (h₁₂ : IsHomothetic L₁ L₂)
+    (h₂₃ : IsHomothetic L₂ L₃) : IsHomothetic L₁ L₃ :=
+  h₁₂.trans h₂₃
+
+example : Equivalence IsHomothetic :=
+  isHomothetic_equivalence
+
+example {L L' : PeriodPair} (c : ℂ) (hc : c ≠ 0)
+    (hLat : (L'.lattice : Set ℂ) = c • (L.lattice : Set ℂ)) : IsHomothetic L L' :=
+  ⟨c, hc, hLat⟩
+
+end PeriodPair

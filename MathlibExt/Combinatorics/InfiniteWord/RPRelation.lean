@@ -1,0 +1,36 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+public import Mathlib.Logic.Equiv.Basic
+
+namespace MetaMathlibExt
+
+@[expose] public section
+
+namespace ReversePermute
+
+/-- K-string: an ordered list of numbers from `[k]`, modelled as `List (Fin k)`.
+Cites source statement `jis_cd98d66d9dff78260169a2e4` for concept
+`jis_sem_f50f75500661653b133949f3` (`rp relation`, alias `RP relation`). -/
+public abbrev KString (k : ℕ) := List (Fin k)
+
+/-- Reverse-permute (RP) relation on `k`-strings: `s` and `t` are related when
+`t` can be obtained from `s` by permuting the entries (applying a permutation
+of `Fin k` pointwise) and possibly reversing the string.
+Cites concept `jis_sem_f50f75500661653b133949f3` (`rp relation`, alias
+`RP relation`) and source statement `jis_cd98d66d9dff78260169a2e4`. -/
+public def rpRelation (k : ℕ) (s t : KString k) : Prop :=
+  ∃ σ : Equiv.Perm (Fin k), t = s.map (⇑σ) ∨ t = s.reverse.map (⇑σ)
+
+end ReversePermute
+
+end
+
+end MetaMathlibExt

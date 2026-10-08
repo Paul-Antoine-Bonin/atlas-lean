@@ -1,0 +1,39 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+public import MathlibExt.RingTheory.LocalRing.Henselian
+
+@[expose] public section
+
+open IsLocalRing Polynomial
+
+variable (R : Type*) [CommRing R] [IsLocalRing R]
+  [IsAdicComplete (maximalIdeal R) R]
+
+example : HenselianLocalRing R :=
+  HenselianLocalRing.of_isAdicComplete_maximalIdeal R
+
+example :
+    ∀ (f : R[X]), f.Monic → ∀ a0 : ResidueField R,
+      Polynomial.aeval a0 f = 0 →
+      Polynomial.aeval a0 f.derivative ≠ 0 →
+      ∃ a : R, f.IsRoot a ∧ residue R a = a0 := by
+  let : HenselianLocalRing R :=
+    HenselianLocalRing.of_isAdicComplete_maximalIdeal R
+  exact ((HenselianLocalRing.TFAE R).out 1 2).mp
+    (inferInstance : HenselianLocalRing R)
+
+example (f : R[X]) (hf : f.Monic) (a0 : R)
+    (hroot : f.eval a0 ∈ maximalIdeal R)
+    (hderiv : IsUnit (f.derivative.eval a0)) :
+    ∃ a : R, f.IsRoot a ∧ a - a0 ∈ maximalIdeal R := by
+  let : HenselianLocalRing R :=
+    HenselianLocalRing.of_isAdicComplete_maximalIdeal R
+  exact HenselianLocalRing.is_henselian f hf a0 hroot hderiv

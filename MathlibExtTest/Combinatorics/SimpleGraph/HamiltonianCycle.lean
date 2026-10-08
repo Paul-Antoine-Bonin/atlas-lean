@@ -1,0 +1,27 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+public import MathlibExt.Combinatorics.SimpleGraph.HamiltonianCycle
+
+@[expose] public section
+
+namespace MathlibExtTest.Combinatorics.SimpleGraph.HamiltonianCycle
+
+-- The cyclic listing `0, 1, 2, 0` witnesses a Hamiltonian cycle in the complete graph.
+example : (⊤ : SimpleGraph (Fin 3)).IsHamiltonian := by
+  apply SimpleGraph.IsHamiltonian.of_cyclic_list (⊤ : SimpleGraph (Fin 3))
+    [0, 1, 2, 0] (by decide)
+  · decide
+  · decide
+  · decide
+  · decide
+  · decide
+
+end MathlibExtTest.Combinatorics.SimpleGraph.HamiltonianCycle

@@ -1,0 +1,58 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+public import MathlibExt.NumberTheory.Ramanujan.Part1Ch1Entry1
+
+namespace MathlibExtTest.NumberTheory.Ramanujan.Part1Ch1Entry1
+
+open MathlibExt.NumberTheory.Ramanujan.Part1Ch1.Entry1Magicsquare3
+
+/-- Every endomap of `Fin 1` is bijective. -/
+private theorem bijective_fin1 (f : Fin 1 → Fin 1) : Function.Bijective f :=
+  ⟨fun a b _ => Subsingleton.elim a b, fun _ => ⟨0, Subsingleton.elim _ _⟩⟩
+
+/-- Every map out of `Fin 1 × Fin 1` into itself is bijective. -/
+private theorem bijective_fin1_prod (f : Fin 1 × Fin 1 → Fin 1 × Fin 1) :
+    Function.Bijective f :=
+  ⟨fun a b _ => Subsingleton.elim a b, fun _ => ⟨(0, 0), Subsingleton.elim _ _⟩⟩
+
+-- Boundary case `n = 1`: the common line-sum value is `5 + 7 = 12`.
+example : ∃ S : ℕ, S = 12 := by
+  have h := ramanujan_part1_ch1_entry1_magicsquare3
+    (n := 1) (by decide : 0 < 1)
+    (a := fun _ => 5) (b := fun _ => 7)
+    (L := fun _ _ => (0 : Fin 1)) (R := fun _ _ => (0 : Fin 1))
+    (fun i => bijective_fin1 _) (fun j => bijective_fin1 _)
+    (bijective_fin1 _) (bijective_fin1 _)
+    (fun i => bijective_fin1 _) (fun j => bijective_fin1 _)
+    (bijective_fin1 _) (bijective_fin1 _)
+    (bijective_fin1_prod _)
+  obtain ⟨S, hrow, hcol, hdiag, hanti⟩ := h
+  have h0 := hrow 0
+  have h1 := hcol 0
+  simp at h0 h1 hdiag hanti
+  exact ⟨S, by omega⟩
+
+-- Boundary case `n = 1`: the diagonal and anti-diagonal sums give `3 + 4 = 7`.
+example : ∃ S : ℕ, S = 7 := by
+  have h := ramanujan_part1_ch1_entry1_magicsquare3
+    (n := 1) (by decide : 0 < 1)
+    (a := fun _ => 3) (b := fun _ => 4)
+    (L := fun _ _ => (0 : Fin 1)) (R := fun _ _ => (0 : Fin 1))
+    (fun i => bijective_fin1 _) (fun j => bijective_fin1 _)
+    (bijective_fin1 _) (bijective_fin1 _)
+    (fun i => bijective_fin1 _) (fun j => bijective_fin1 _)
+    (bijective_fin1 _) (bijective_fin1 _)
+    (bijective_fin1_prod _)
+  obtain ⟨S, -, -, hdiag, hanti⟩ := h
+  simp at hdiag hanti
+  exact ⟨S, by omega⟩
+
+end MathlibExtTest.NumberTheory.Ramanujan.Part1Ch1Entry1

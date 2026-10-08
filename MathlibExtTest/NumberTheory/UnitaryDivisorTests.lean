@@ -1,0 +1,38 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+public import MathlibExt.NumberTheory.UnitaryDivisor
+
+@[expose] public section
+
+example : Nat.unitaryDivisors 12 = {1, 3, 4, 12} := by decide
+
+example : Nat.sigmaStar 12 = 20 := by decide
+
+example {n d : ℕ} :
+    d ∈ Nat.unitaryDivisors n ↔ d ∣ n ∧ n ≠ 0 ∧ d.Coprime (n / d) := by
+  rw [Nat.mem_unitaryDivisors]
+
+example : Nat.unitaryDivisors 0 = ∅ := by simp
+
+example : Nat.sigmaStar 0 = 0 := by simp
+
+example {n d : ℕ} (h : d ∈ Nat.unitaryDivisors n) : d ∣ n :=
+  Nat.dvd_of_mem_unitaryDivisors h
+
+example {n d : ℕ} (h : d ∈ Nat.unitaryDivisors n) : d.Coprime (n / d) :=
+  Nat.coprime_div_of_mem_unitaryDivisors h
+
+example : ¬ (∅ : Set ℕ).IsPrimitiveByDivisibility 1 := by
+  simp
+
+example {S : Set ℕ} {n d : ℕ} (h : S.IsPrimitiveByDivisibility n)
+    (hdvd : d ∣ n) (hdn : d < n) : d ∉ S :=
+  h.not_mem_of_dvd_lt hdvd hdn

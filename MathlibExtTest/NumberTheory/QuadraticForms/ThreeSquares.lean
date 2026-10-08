@@ -1,0 +1,29 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+import MathlibExt.NumberTheory.QuadraticForms.ThreeSquares
+
+namespace Nat
+
+example : threeSquareRepresentationCount 0 = 1 := by decide
+
+example : threeSquareRepresentationCount 1 = 6 := by decide
+
+example : threeSquareRepresentationCount 7 = 0 :=
+  threeSquareRepresentationCount_eq_zero_of_mod_eight_eq_seven 7 (by decide) (by decide)
+
+example : threeSquareRepresentationCount 4 = threeSquareRepresentationCount 1 :=
+  threeSquareRepresentationCount_eq_threeSquareRepresentationCount_div_four 4
+    (by decide) (by decide)
+
+#print axioms Nat.threeSquareRepresentationCount_eq_zero_of_mod_eight_eq_seven
+#print axioms Nat.threeSquareRepresentationCount_eq_threeSquareRepresentationCount_div_four
+
+end Nat

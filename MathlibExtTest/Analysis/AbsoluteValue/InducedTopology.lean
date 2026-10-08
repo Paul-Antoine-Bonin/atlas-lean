@@ -1,0 +1,35 @@
+/-
+Copyright (c) Meta Platforms, Inc. and affiliates.
+All rights reserved.
+
+This source code is licensed under the license found in the
+LICENSE file in the root directory of this source tree.
+-/
+
+module
+
+public import MathlibExt.Analysis.AbsoluteValue.InducedTopology
+
+@[expose] public section
+
+namespace AbsoluteValue
+
+variable {K : Type*} [Field K]
+
+example (v w : AbsoluteValue K ℝ) :
+    v.inducedTopology = w.inducedTopology ↔ v.IsEquiv w :=
+  inducedTopology_eq_iff_isEquiv v w
+
+example {v w : AbsoluteValue K ℝ} (h : v.IsEquiv w) :
+    v.inducedTopology = w.inducedTopology :=
+  (inducedTopology_eq_iff_isEquiv v w).mpr h
+
+example (v : AbsoluteValue K ℝ) : v.inducedTopology =
+    letI : NormedRing (WithAbs v) := WithAbs.normedRing v
+    TopologicalSpace.induced (WithAbs.toAbs v) inferInstance :=
+  rfl
+
+example (v : AbsoluteValue K ℝ) : v.IsEquiv v :=
+  (inducedTopology_eq_iff_isEquiv v v).mp rfl
+
+end AbsoluteValue

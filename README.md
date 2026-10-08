@@ -5,6 +5,11 @@
 <h1 align="center">ATLAS</h1>
 
 <p align="center">
+  <a href="https://github.com/facebookresearch/atlas-lean/actions/workflows/ci.yml"><img src="https://github.com/facebookresearch/atlas-lean/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI status" /></a>
+  <a href="https://github.com/leanprover/lean4/releases/tag/v4.34.1"><img src="https://img.shields.io/badge/Lean-v4.34.1-blue" alt="Lean v4.34.1" /></a>
+</p>
+
+<p align="center">
   <strong>Autoformalized Textbook Library At Scale</strong><br />
   A large-scale Lean 4 library of textbook mathematics formalized with LLMs.
 </p>
@@ -20,6 +25,28 @@
 | --- | --- | --- | --- |
 | **v2** | In development | Repository root | [Apache 2.0](LICENSE) |
 | **v1** | Archived and available | [`v1/`](v1/README.md) | [Original v1 license](v1/LICENSE) |
+
+## Formalized mathematics libraries
+
+The root Lake package is limited to five libraries:
+
+| Directory | Purpose |
+| --- | --- |
+| [`MathlibExt/`](MathlibExt/README.md) | Reusable, fully proved extensions to Mathlib |
+| [`MathlibExtTest/`](MathlibExtTest/README.md) | Tests, benchmarks, and diagnostics for `MathlibExt` |
+| [`CSLibExt/`](CSLibExt/README.md) | Reusable, fully proved computer-science developments built on `MathlibExt` |
+| [`CSLibExtTest/`](CSLibExtTest/README.md) | Tests and diagnostics for `CSLibExt` |
+| [`WantedExt/`](WantedExt/README.md) | Established results whose Lean implementation or proof is deferred |
+
+Repository checks live in [`scripts/`](scripts/README.md). Run the complete
+root validation with:
+
+```bash
+scripts/check.sh
+```
+
+The existing `Atlas/` developments and archived `v1/` release are not part of
+this root build. They retain their own build configuration.
 
 ## About ATLAS
 
