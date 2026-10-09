@@ -3,7 +3,7 @@ declaration: theorem
 origin: cited
 statement: formalized
 proof: formalized
-lean: CDIS.genInv_le_iff, CDIS.le_genInv_of_apply_lt, CDIS.monotoneOn_genInv, CDIS.genInv_apply_le, CDIS.le_apply_genInv', CDIS.apply_genInv_of_mem_range
+lean: CDIS.genInv_le_iff, CDIS.le_genInv_of_apply_lt, CDIS.monotoneOn_genInv, CDIS.genInv_apply_le, CDIS.le_apply_genInv, CDIS.apply_genInv_of_mem_range
 ---
 
 # Properties of the generalized inverse

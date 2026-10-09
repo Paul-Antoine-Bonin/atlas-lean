@@ -18,5 +18,12 @@ rev = "v4.34.0"
 [[lean_lib]]
 name = "Code"
 
+# The roadmap is an input of `Verify`, so editing an article re-runs the name check.
+[[input_dir]]
+name = "roadmap"
+path = "roadmap"
+text = true
+
 [[lean_lib]]
 name = "Verify"
+needs = ["roadmap"]

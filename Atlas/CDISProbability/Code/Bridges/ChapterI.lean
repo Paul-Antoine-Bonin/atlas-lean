@@ -5,14 +5,16 @@ All rights reserved.
 This source code is licensed under the license found in the
 LICENSE file in the root directory of this source tree.
 -/
+import Code.Basic
 import Mathlib.Probability.CDF
 import Mathlib.MeasureTheory.Integral.Bochner.Set
 
 /-!
 # CDIS Probabilités I: bridge statements
 
-Faithful Lean versions of three statements of the Mines Paris course CDIS
-(Boisgérault et al., CC BY-NC-SA 4.0), each proved from an existing Mathlib lemma.
+Faithful Lean versions of statements of the Mines Paris course CDIS
+(Boisgérault et al., CC BY-NC-SA 4.0), each proved from existing Mathlib lemmas. Each theorem
+states the whole course statement, so a statement with several items is one conjunction.
 Probabilities are real-valued (`P.real`), as in the course.
 
 * id 5: elementary properties of a probability (items 1 to 5, including Poincaré's formula).
@@ -26,41 +28,30 @@ namespace CDIS
 
 variable {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω} [IsProbabilityMeasure P]
 
-/-- CDIS P.I, id 5, item 1: `P(A) ∈ [0,1]` and `P(Aᶜ) = 1 - P(A)`. -/
-theorem prob_mem_Icc_and_compl {A : Set Ω} (hA : MeasurableSet A) :
-    P.real A ∈ Icc (0 : ℝ) 1 ∧ P.real Aᶜ = 1 - P.real A :=
-  ⟨⟨measureReal_nonneg, measureReal_le_one⟩, probReal_compl_eq_one_sub hA⟩
-
-/-- CDIS P.I, id 5, item 2: monotonicity. -/
-theorem prob_mono {A B : Set Ω} (hAB : A ⊆ B) : P.real A ≤ P.real B :=
-  measureReal_mono hAB
-
-/-- CDIS P.I, id 5, item 3: `P(A ∪ B) = P(A) + P(B) - P(A ∩ B)`. -/
-theorem prob_union {A B : Set Ω} (hB : MeasurableSet B) :
-    P.real (A ∪ B) = P.real A + P.real B - P.real (A ∩ B) := by
+/-- CDIS P.I, id 5 (elementary properties of a probability), all five items: `P(A) ∈ [0,1]` and
+`P(Aᶜ) = 1 - P(A)`; monotonicity; `P(A ∪ B) = P(A) + P(B) - P(A ∩ B)`; Boole's inequality; and
+Poincaré's formula (inclusion-exclusion). The course writes the alternating sum by intersection
+size; here it is indexed by the nonempty subsets `u`. -/
+theorem prob_properties {A B : Set Ω} (hA : MeasurableSet A) (hB : MeasurableSet B)
+    {ι : Type*} (s : Finset ι) {C : ι → Set Ω} (hC : ∀ i ∈ s, MeasurableSet (C i)) :
+    (P.real A ∈ Icc (0 : ℝ) 1 ∧ P.real Aᶜ = 1 - P.real A) ∧
+      (A ⊆ B → P.real A ≤ P.real B) ∧
+      P.real (A ∪ B) = P.real A + P.real B - P.real (A ∩ B) ∧
+      P.real (⋃ i ∈ s, C i) ≤ ∑ i ∈ s, P.real (C i) ∧
+      P.real (⋃ i ∈ s, C i) =
+        ∑ u ∈ s.powerset with u.Nonempty, (-1 : ℝ) ^ (u.card + 1) * P.real (⋂ i ∈ u, C i) := by
+  refine ⟨⟨⟨measureReal_nonneg, measureReal_le_one⟩, probReal_compl_eq_one_sub hA⟩,
+    fun h ↦ measureReal_mono h, ?_, measureReal_biUnion_finset_le s C,
+    measureReal_biUnion_eq_sum_powerset hC⟩
   have := measureReal_union_add_inter (μ := P) (s := A) hB
   linarith
-
-omit [IsProbabilityMeasure P] in
-/-- CDIS P.I, id 5, item 4 (Boole's inequality). -/
-theorem prob_biUnion_le {ι : Type*} (s : Finset ι) (A : ι → Set Ω) :
-    P.real (⋃ i ∈ s, A i) ≤ ∑ i ∈ s, P.real (A i) :=
-  measureReal_biUnion_finset_le s A
-
-/-- CDIS P.I, id 5, item 5 (Poincaré's formula, i.e. inclusion-exclusion). The course writes the
-alternating sum by intersection size; here it is indexed by the nonempty subsets `u`. -/
-theorem prob_biUnion_eq_sum_powerset {ι : Type*} (s : Finset ι) {A : ι → Set Ω}
-    (hA : ∀ i ∈ s, MeasurableSet (A i)) :
-    P.real (⋃ i ∈ s, A i) =
-      ∑ u ∈ s.powerset with u.Nonempty, (-1 : ℝ) ^ (u.card + 1) * P.real (⋂ i ∈ u, A i) :=
-  measureReal_biUnion_eq_sum_powerset hA
 
 /-- CDIS P.I, id 24: two real random variables with the same distribution function have the same
 law. -/
 theorem law_eq_of_cdf_eq {X Y : Ω → ℝ} (hX : AEMeasurable X P) (hY : AEMeasurable Y P)
     (h : cdf (P.map X) = cdf (P.map Y)) : P.map X = P.map Y := by
-  have := (Measure.isProbabilityMeasure_map_iff hX).2 ‹_›
-  have := (Measure.isProbabilityMeasure_map_iff hY).2 ‹_›
+  have := isProbabilityMeasure_map hX
+  have := isProbabilityMeasure_map hY
   exact Measure.eq_of_cdf _ _ h
 
 /-- CDIS P.I, id 25: `F` is the distribution function of a unique probability on `ℝ` if and only

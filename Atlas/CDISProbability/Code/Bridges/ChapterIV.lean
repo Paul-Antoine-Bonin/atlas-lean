@@ -20,8 +20,9 @@ import Mathlib.MeasureTheory.Measure.LevyConvergence
   `not_chebyshev_of_neg` shows it fails for `a < 0`, and `chebyshev_abs_sub` proves it for `a > 0`.
 * id 74: strong law of large numbers, almost sure and `L¹` convergence.
 * id 79: central limit theorem in the course's normalisation `(S_n - n m) / (σ √n) → N(0,1)`.
-* id 89: characteristic function of a Gaussian vector, with mean vector and covariance.
-* id 90: Lévy's continuity theorem, both directions of the course statement.
+* id 90: Lévy's continuity theorem. Part 1 is Mathlib's
+  `ProbabilityMeasure.tendsto_iff_tendsto_charFun`; part 2, that a pointwise limit continuous at
+  `0` is a characteristic function, is proved here.
 -/
 
 open MeasureTheory ProbabilityTheory Filter Topology Finset
@@ -134,33 +135,10 @@ theorem clt_standardized {X : ℕ → Ω → ℝ} {Z : Ω' → ℝ} (hZ : HasLaw
 
 end CLT
 
-section Gaussian
+section CharFun
 
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [FiniteDimensional ℝ E]
   [MeasurableSpace E] [BorelSpace E]
-
-/-- CDIS P.IV, id 89: a square-integrable law `μ` on a Euclidean space is Gaussian iff
-`φ(u) = exp(i ⟪u, m⟫ - ⟪u, C u⟫ / 2)`, with `m = E(X)` and `C` the covariance (as a bilinear
-form; `covarianceBilin_self_nonneg` gives that it is positive semidefinite). -/
-theorem isGaussian_iff_charFun_eq_mean_cov {μ : Measure E} [IsProbabilityMeasure μ]
-    (h2 : MemLp id 2 μ) :
-    IsGaussian μ ↔ ∀ u : E,
-      charFun μ u = Complex.exp (⟪u, ∫ x, x ∂μ⟫ * Complex.I - covarianceBilin μ u u / 2) := by
-  rw [isGaussian_iff_charFun_eq]
-  have hint : Integrable id μ := h2.integrable one_le_two
-  refine forall_congr' fun u ↦ ?_
-  have hi : ∫ x, ⟪u, x⟫ ∂μ = ⟪u, ∫ x, x ∂μ⟫ := integral_inner hint u
-  rw [covarianceBilin_self h2, integral_complex_ofReal, hi]
-
-/-- CDIS P.IV, id 90, part 1: convergence in law implies pointwise convergence of the
-characteristic functions. -/
-theorem tendsto_charFun_of_tendstoInDistribution {Ω' : Type*} {Ω : ℕ → Type*}
-    {m : ∀ n, MeasurableSpace (Ω n)} {P : (n : ℕ) → Measure (Ω n)}
-    [∀ n, IsProbabilityMeasure (P n)] {m' : MeasurableSpace Ω'} {P' : Measure Ω'}
-    [IsProbabilityMeasure P'] {X : (n : ℕ) → Ω n → E} {X' : Ω' → E}
-    (h : TendstoInDistribution X atTop X' P P') (u : E) :
-    Tendsto (fun n ↦ charFun ((P n).map (X n)) u) atTop (𝓝 (charFun (P'.map X') u)) :=
-  h.tendsto_charFun u
 
 /-- CDIS P.IV, id 90, part 2 (Lévy's continuity theorem): if the characteristic functions
 converge pointwise to a function `φ` continuous at `0`, then `φ` is the characteristic function
@@ -183,6 +161,6 @@ theorem exists_tendsto_of_tendsto_charFun {μ : ℕ → ProbabilityMeasure E} {�
   rw [hφμ₀]
   exact h u
 
-end Gaussian
+end CharFun
 
 end CDIS

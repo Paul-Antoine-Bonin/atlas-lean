@@ -5,6 +5,7 @@ All rights reserved.
 This source code is licensed under the license found in the
 LICENSE file in the root directory of this source tree.
 -/
+import Code.Basic
 import Mathlib.Probability.Distributions.Uniform
 
 /-!
@@ -88,7 +89,7 @@ theorem isUniform_subgraph [IsProbabilityMeasure P] {f : ℝ → ℝ} (hf : Meas
     rfl
   have : IsProbabilityMeasure ((μX.prod ν).map T) := by
     rw [← hlaw]
-    exact (Measure.isProbabilityMeasure_map_iff (hT.comp_aemeasurable hXU')).2 ‹_›
+    exact isProbabilityMeasure_map (hT.comp_aemeasurable hXU')
   -- the two measures agree on rectangles
   have hrect : ∀ {s t : Set ℝ}, MeasurableSet s → MeasurableSet t →
       (μX.prod ν).map T (s ×ˢ t) = volume.restrict (subgraph f) (s ×ˢ t) := by

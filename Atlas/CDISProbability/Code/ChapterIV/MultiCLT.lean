@@ -5,7 +5,7 @@ All rights reserved.
 This source code is licensed under the license found in the
 LICENSE file in the root directory of this source tree.
 -/
-import Code.ChapterII.CovarianceMatrix
+import Code.ChapterIV.Gaussian
 import Mathlib.Probability.CentralLimitTheorem
 import Mathlib.Probability.CramerWold
 import Mathlib.Probability.Distributions.Gaussian.Multivariate
@@ -28,10 +28,6 @@ open scoped RealInnerProductSpace
 namespace CDIS
 
 variable {ι : Type*} [Fintype ι] [DecidableEq ι]
-
-omit [DecidableEq ι] in
-lemma inner_eq_sum_mul (x t : EuclideanSpace ℝ ι) : ⟪x, t⟫ = ∑ i, t i * x i := by
-  simp [PiLp.inner_apply, mul_comm]
 
 /-- `⟪Z, t⟫` has law `N(0, tᵀ C t)` when `Z` has law `multivariateGaussian 0 C`. -/
 lemma hasLaw_inner_multivariateGaussian {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'}
@@ -65,8 +61,7 @@ theorem tendstoInDistribution_multivariate_clt {Ω Ω' : Type*} [MeasurableSpace
       (fun (n : ℕ) ω ↦ (√n)⁻¹ • (∑ k ∈ range n, X k ω - (n : ℝ) • ∫ ω, X 0 ω ∂P))
       atTop Z (fun _ ↦ P) P' := by
   set C := covMatrix (fun i ω ↦ X 0 ω i) P
-  have hcoord : ∀ i, MemLp (fun ω ↦ X 0 ω i) 2 P := fun i ↦
-    (EuclideanSpace.proj i : StrongDual ℝ (EuclideanSpace ℝ ι)).comp_memLp' h2
+  have hcoord : ∀ i, MemLp (fun ω ↦ X 0 ω i) 2 P := memLp_two_coord_comp h2
   have hC : C.PosSemidef := covMatrix_posSemidef hcoord
   have hXmeas : ∀ n, AEMeasurable (X n) P := fun n ↦ (hident n).aemeasurable_fst
   rw [tendstoInDistribution_iff_tendstoInDistribution_inner hZ.aemeasurable fun n ↦ by

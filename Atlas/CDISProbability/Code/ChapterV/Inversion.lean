@@ -5,6 +5,7 @@ All rights reserved.
 This source code is licensed under the license found in the
 LICENSE file in the root directory of this source tree.
 -/
+import Code.Basic
 import Mathlib.Probability.CDF
 import Mathlib.Probability.HasLaw
 import Mathlib.Probability.Distributions.Exponential
@@ -19,9 +20,12 @@ import Mathlib.Probability.Distributions.Exponential
   function `F`.
 * id 92: the bijective case: `F⁻¹(U) ~ X` and `F(X) ~ U`.
 
-The course defines `F⁻` on `]0,1[` only. In Lean `genInv F` is total; outside `]0,1[` the infimum
-is taken over `ℝ` or over `∅` and returns the junk value `0`. Every statement below carries the
-hypothesis `u ∈ ]0,1[` where the course has it implicitly.
+The course defines `F⁻` on `]0,1[` only. In Lean `genInv F` is total. For `u ≤ 0` the infimum is
+over `ℝ` and for `u > 1` over `∅`, and both return the junk value `0` (`genInv_of_nonpos`,
+`genInv_of_one_lt`). At `u = 1` the set `{x | F(x) ≥ 1}` can be nonempty and bounded below, and
+then `genInv F 1` is its genuine infimum: for the Dirac mass at `5` it is `5`
+(`genInv_cdf_dirac_one`). Every statement below carries the hypothesis `u ∈ ]0,1[` where the
+course has it implicitly, and the value at `1` does not matter since `U ∈ ]0,1[` almost surely.
 
 Prior art: the same object is `Measure.quantile` in TauCeti (`TauCeti/Probability/Quantile.lean`)
 and `lowerQuantile` in the open Mathlib PR #42461. Neither is in Mathlib yet.
@@ -46,8 +50,9 @@ lemma bddBelow_setOf_le (hF : Tendsto F atBot (𝓝 0)) (hu : 0 < u) : BddBelow 
   refine ⟨a, fun x hx ↦ le_of_not_gt fun hxa ↦ ?_⟩
   exact (ha x hxa.le).not_ge hx
 
-/-- `F⁻(u)` belongs to `{x | u ≤ F x}`: this is where right continuity is used. -/
-lemma le_apply_genInv (hF1 : Tendsto F atTop (𝓝 1)) (hu1 : u < 1) : u ≤ F (genInv F u) := by
+/-- CDIS P.V, id 101, item 3: `F(F⁻(u)) ≥ u`, for every `u < 1` and so on `]0,1[`, since
+`F⁻(u)` belongs to `{x | u ≤ F x}`: this is where right continuity is used. -/
+theorem le_apply_genInv (hF1 : Tendsto F atTop (𝓝 1)) (hu1 : u < 1) : u ≤ F (genInv F u) := by
   have hne := nonempty_setOf_le hF1 hu1
   have h : Tendsto F (𝓝[>] (genInv F u)) (𝓝 (F (genInv F u))) :=
     (F.right_continuous _).mono_left (nhdsWithin_mono _ Ioi_subset_Ici_self)
@@ -81,11 +86,6 @@ defined on `]0,1[`, so `F(x) > 0` is required (with `F(x) = 0` the infimum is ov
 theorem genInv_apply_le (hF0 : Tendsto F atBot (𝓝 0)) (hx : 0 < F x) : genInv F (F x) ≤ x :=
   csInf_le (bddBelow_setOf_le hF0 hx) (le_refl (F x) : F x ≤ F x)
 
-/-- CDIS P.V, id 101, item 3: `F(F⁻(u)) ≥ u` for `u ∈ ]0,1[`. -/
-theorem le_apply_genInv' (hF1 : Tendsto F atTop (𝓝 1)) (hu : u ∈ Ioo (0 : ℝ) 1) :
-    u ≤ F (genInv F u) :=
-  le_apply_genInv hF1 hu.2
-
 /-- CDIS P.V, id 101, item 3 (equality case): `F(F⁻(u)) = u` when `u ∈ F(ℝ)`. -/
 theorem apply_genInv_of_mem_range (hF0 : Tendsto F atBot (𝓝 0)) (hF1 : Tendsto F atTop (𝓝 1))
     (hu : u ∈ Ioo (0 : ℝ) 1) (hrange : u ∈ range F) : F (genInv F u) = u := by
@@ -99,6 +99,15 @@ lemma genInv_of_nonpos (F : ℝ → ℝ) (hF : ∀ x, 0 ≤ F x) (hu : u ≤ 0) 
 lemma genInv_of_one_lt (F : ℝ → ℝ) (hF : ∀ x, F x ≤ 1) (hu : 1 < u) : genInv F u = 0 := by
   rw [genInv, show {x | u ≤ F x} = ∅ from
     eq_empty_of_forall_notMem fun x hx ↦ (hx.trans (hF x)).not_gt hu, Real.sInf_empty]
+
+/-- At `u = 1` the value of `genInv` is not the junk `0` in general: for the Dirac mass at `5`,
+`F⁻(1) = 5`. -/
+theorem genInv_cdf_dirac_one : genInv (cdf (Measure.dirac (5 : ℝ))) 1 = 5 := by
+  have hset : {x | (1 : ℝ) ≤ cdf (Measure.dirac (5 : ℝ)) x} = Ici 5 := by
+    ext x
+    simp only [mem_ofPred_eq, mem_Ici, cdf_eq_real]
+    by_cases h : (5 : ℝ) ≤ x <;> simp [h, measureReal_def]
+  rw [genInv, hset, csInf_Ici]
 
 /-- The generalized inverse of a distribution function is measurable. -/
 theorem measurable_genInv (hF0 : Tendsto F atBot (𝓝 0)) (hF1 : Tendsto F atTop (𝓝 1))
@@ -151,7 +160,7 @@ theorem map_genInv_cdf (μ : Measure ℝ) [IsProbabilityMeasure μ] :
   have hm := measurable_genInv_cdf μ
   have : IsProbabilityMeasure (volume.restrict (Ioo (0 : ℝ) 1)) := ⟨by simp⟩
   have : IsProbabilityMeasure ((volume.restrict (Ioo (0 : ℝ) 1)).map (genInv (cdf μ))) :=
-    (Measure.isProbabilityMeasure_map_iff hm.aemeasurable).2 ‹_›
+    isProbabilityMeasure_map hm.aemeasurable
   refine Measure.ext_of_Iic _ _ fun x ↦ ?_
   rw [Measure.map_apply hm measurableSet_Iic, Measure.restrict_apply (hm measurableSet_Iic),
     ← ofReal_cdf μ x]
@@ -178,7 +187,7 @@ theorem hasLaw_genInv_cdf (μ : Measure ℝ) [IsProbabilityMeasure μ] {U : Ω �
 theorem hasLaw_genInv_cdf_map {X U : Ω → ℝ} (hX : AEMeasurable X P)
     (hU : HasLaw U (volume.restrict (Ioo (0 : ℝ) 1)) P) :
     HasLaw (fun ω ↦ genInv (cdf (P.map X)) (U ω)) (P.map X) P :=
-  have : IsProbabilityMeasure (P.map X) := (Measure.isProbabilityMeasure_map_iff hX).2 ‹_›
+  have : IsProbabilityMeasure (P.map X) := isProbabilityMeasure_map hX
   hasLaw_genInv_cdf (P.map X) hU
 
 end Inversion
@@ -240,8 +249,7 @@ theorem IsCdfBijection.map_cdf (h : IsCdfBijection (cdf μ) I G) :
     μ.map (cdf μ) = volume.restrict (Ioo (0 : ℝ) 1) := by
   have hm : Measurable (cdf μ) := (monotone_cdf μ).measurable
   have : IsProbabilityMeasure (volume.restrict (Ioo (0 : ℝ) 1)) := ⟨by simp⟩
-  have : IsProbabilityMeasure (μ.map (cdf μ)) :=
-    (Measure.isProbabilityMeasure_map_iff hm.aemeasurable).2 ‹_›
+  have : IsProbabilityMeasure (μ.map (cdf μ)) := isProbabilityMeasure_map hm.aemeasurable
   refine Measure.ext_of_Iic _ _ fun c ↦ ?_
   rw [Measure.map_apply hm measurableSet_Iic, Measure.restrict_apply measurableSet_Iic,
     inter_comm]

@@ -14,11 +14,16 @@ import Mathlib.Probability.StrongLaw
 
 * id 99: the fundamental identity `E_f[h(X)] = ∫ h (f/g) g`, and the almost sure convergence of
   the importance sampling estimator `(1/n) ∑ (f/g)(X_i) h(X_i)` for `X_i` i.i.d. with density `g`.
-* id 100: the optimal instrumental density `g* = |h| f / ∫ |h| f` minimises
-  `E_g[(h f / g)²] = ∫ h² f² / g`, hence the variance of the estimator.
+* id 100: the optimal instrumental density `g* = |h| f / ∫ |h| f` minimises the variance of the
+  estimator, for every sample size (`variance_estimator_optimal_le`). The chain is: the variance of
+  one term is `∫ (h f)² / g - (E_f[h])²` (`variance_importanceSampling`), the estimator has
+  variance `Var_g[(f / g) h] / n` (`variance_importanceSampling_estimator`), and `g*` minimises
+  `∫ (h f)² / g` by Cauchy-Schwarz (`isMinOn_optimal_density`).
 
 The course says there is "no restriction on the choice of `g`". The identity needs `g > 0`
-wherever `f > 0`; `not_forall_integral_eq_integral_ratio` shows it fails otherwise.
+wherever `h f ≠ 0`; `not_forall_integral_eq_integral_ratio` shows it fails otherwise. This is
+the support condition used throughout, and `g*` satisfies it even where `h` vanishes and `f` does
+not.
 -/
 
 open MeasureTheory ProbabilityTheory Filter Topology Set
@@ -28,9 +33,10 @@ namespace CDIS
 
 section Identity
 
-/-- CDIS P.V, id 99: the fundamental identity of importance sampling. -/
-theorem integral_mul_eq_integral_ratio {f g : ℝ → ℝ} (h : ℝ → ℝ)
-    (hsupp : ∀ x, g x = 0 → f x = 0) :
+/-- CDIS P.V, id 99: the fundamental identity of importance sampling, for any `g` that is
+nonzero wherever `h f` is. -/
+theorem integral_mul_eq_integral_ratio {f g h : ℝ → ℝ}
+    (hsupp : ∀ x, g x = 0 → h x * f x = 0) :
     ∫ x, h x * f x = ∫ x, h x * f x / g x * g x := by
   congr 1
   ext x
@@ -110,17 +116,18 @@ theorem sq_integral_le_integral_sq_div (ha : 0 ≤ a) (hg : 0 ≤ g) (ham : Meas
     _ = ∫ x, a x ^ 2 / g x := by
       rw [← Real.sqrt_eq_rpow, Real.sq_sqrt hV]
 
+/-- Under the optimal density `g* = a / ∫ a`, the integrand `a² / g*` is `(∫ a) a`. -/
+lemma sq_div_optimal_eq (x : ℝ) : a x ^ 2 / (a x / ∫ y, a y) = (∫ y, a y) * a x := by
+  by_cases hax : a x = 0
+  · simp [hax]
+  · by_cases hc : ∫ y, a y = 0
+    · simp [hc]
+    · field_simp
+
 /-- The optimal density `g* = a / ∫ a` attains the bound: `∫ a² / g* = (∫ a)²`. -/
 theorem integral_sq_div_optimal :
     ∫ x, a x ^ 2 / (a x / ∫ y, a y) = (∫ x, a x) ^ 2 := by
-  have hpt : ∀ x, a x ^ 2 / (a x / ∫ y, a y) = (∫ y, a y) * a x := by
-    intro x
-    by_cases hax : a x = 0
-    · simp [hax]
-    · by_cases hc : ∫ y, a y = 0
-      · simp [hc]
-      · field_simp
-  simp_rw [hpt, integral_const_mul, sq]
+  simp_rw [sq_div_optimal_eq, integral_const_mul, sq]
 
 /-- CDIS P.V, id 100 (optimal density), with `a = |h| f`: among the densities `g` positive where
 `a` is and with `a² / g` integrable, `g* = a / ∫ a` minimises `∫ a² / g = E_g[(h f / g)²]`. -/
@@ -137,12 +144,7 @@ theorem isMinOn_optimal_density (ha : 0 ≤ a) (ham : Measurable a) (hai : Integ
     rcases (div_eq_zero_iff.1 hx) with h | h
     · exact h
     · exact absurd h hpos.ne'
-  · have : (fun x ↦ a x ^ 2 / (a x / ∫ y, a y)) = fun x ↦ (∫ y, a y) * a x := by
-      funext x
-      by_cases hax : a x = 0
-      · simp [hax]
-      · field_simp
-    rw [this]
+  · simp_rw [sq_div_optimal_eq]
     exact hai.const_mul _
   · rintro g ⟨hg, hgm, hgi, hg1, hsupp, hint⟩
     simp only [mem_ofPred_eq, integral_sq_div_optimal]
@@ -172,7 +174,7 @@ lemma integrable_withDensity_ofReal_iff (hgm : Measurable g) (hg : 0 ≤ g) (φ 
   refine integrable_congr (Eventually.of_forall fun x ↦ ?_)
   simp [NNReal.smul_def, Real.coe_toNNReal _ (hg x)]
 
-lemma mul_ratio_eq (hsupp : ∀ x, g x = 0 → f x = 0) (x : ℝ) :
+lemma mul_ratio_eq (hsupp : ∀ x, g x = 0 → h x * f x = 0) (x : ℝ) :
     g x * (f x / g x * h x) = h x * f x := by
   by_cases hgx : g x = 0
   · simp [hgx, hsupp x hgx]
@@ -182,7 +184,7 @@ omit [IsProbabilityMeasure P] in
 /-- CDIS P.V, id 99: the importance sampling estimator `(1/n) ∑ (f/g)(X_i) h(X_i)`, with
 `X_i` i.i.d. of density `g`, converges almost surely to `E_f[h] = ∫ h f`. -/
 theorem tendsto_importanceSampling (hfm : Measurable f) (hgm : Measurable g) (hhm : Measurable h)
-    (hg : 0 ≤ g) (hsupp : ∀ x, g x = 0 → f x = 0) (hint : Integrable fun x ↦ h x * f x)
+    (hg : 0 ≤ g) (hsupp : ∀ x, g x = 0 → h x * f x = 0) (hint : Integrable fun x ↦ h x * f x)
     {X : ℕ → Ω → ℝ} (hlaw : ∀ i, HasLaw (X i) (volume.withDensity fun x ↦ ENNReal.ofReal (g x)) P)
     (hindep : iIndepFun X P) :
     ∀ᵐ ω ∂P, Tendsto (fun n : ℕ ↦ (∑ i ∈ Finset.range n, f (X i ω) / g (X i ω) * h (X i ω)) / n)
@@ -217,9 +219,10 @@ theorem tendsto_importanceSampling_normalized (hfm : Measurable f) (hgm : Measur
     (hindep : iIndepFun X P) :
     ∀ᵐ ω ∂P, Tendsto (fun n : ℕ ↦ (∑ i ∈ Finset.range n, f (X i ω) / g (X i ω) * h (X i ω)) /
       ∑ i ∈ Finset.range n, f (X i ω) / g (X i ω)) atTop (𝓝 (∫ x, h x * f x)) := by
-  have hA := tendsto_importanceSampling hfm hgm hhm hg hsupp hint hlaw hindep
-  have hB := tendsto_importanceSampling (h := fun _ ↦ 1) hfm hgm measurable_const hg hsupp
-    (by simpa using hfi) hlaw hindep
+  have hA := tendsto_importanceSampling hfm hgm hhm hg (fun x hx ↦ by simp [hsupp x hx]) hint
+    hlaw hindep
+  have hB := tendsto_importanceSampling (h := fun _ ↦ 1) hfm hgm measurable_const hg
+    (fun x hx ↦ by simp [hsupp x hx]) (by simpa using hfi) hlaw hindep
   filter_upwards [hA, hB] with ω hAω hBω
   simp only [one_mul, mul_one, hf1] at hBω
   have := hAω.div hBω one_ne_zero
@@ -233,7 +236,7 @@ theorem tendsto_importanceSampling_normalized (hfm : Measurable f) (hgm : Measur
 `∫ (h f)² / g - (E_f[h])²`; only the first term depends on `g`, which is the quantity minimised
 in `isMinOn_optimal_density` (with `a = |h f|`). -/
 theorem variance_importanceSampling (hgm : Measurable g) (hg : 0 ≤ g)
-    (hsupp : ∀ x, g x = 0 → f x = 0)
+    (hsupp : ∀ x, g x = 0 → h x * f x = 0)
     [IsProbabilityMeasure (volume.withDensity fun x ↦ ENNReal.ofReal (g x))]
     (hL2 : MemLp (fun x ↦ f x / g x * h x) 2 (volume.withDensity fun x ↦ ENNReal.ofReal (g x))) :
     Var[fun x ↦ f x / g x * h x; volume.withDensity fun x ↦ ENNReal.ofReal (g x)] =
@@ -243,9 +246,140 @@ theorem variance_importanceSampling (hgm : Measurable g) (hg : 0 ≤ g)
   congr 2
   ext x
   by_cases hgx : g x = 0
-  · simp [hgx, hsupp x hgx]
+  · simp [hgx]
   · field_simp
 
+/-- The law with a probability density `g` is a probability measure. -/
+lemma isProbabilityMeasure_withDensity_ofReal (hg : 0 ≤ g) (hgi : Integrable g)
+    (hg1 : ∫ x, g x = 1) :
+    IsProbabilityMeasure (volume.withDensity fun x ↦ ENNReal.ofReal (g x)) := by
+  constructor
+  rw [withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ,
+    ← ofReal_integral_eq_lintegral_ofReal hgi (Eventually.of_forall hg), hg1, ENNReal.ofReal_one]
+
+/-- One importance sampling term has finite variance under `g` exactly when
+`∫ (h f)² / g < ∞`, the course's condition. -/
+lemma memLp_two_ratio_iff (hfm : Measurable f) (hgm : Measurable g) (hhm : Measurable h)
+    (hg : 0 ≤ g) :
+    MemLp (fun x ↦ f x / g x * h x) 2 (volume.withDensity fun x ↦ ENNReal.ofReal (g x)) ↔
+      Integrable fun x ↦ (h x * f x) ^ 2 / g x := by
+  have hm : AEStronglyMeasurable (fun x ↦ f x / g x * h x)
+      (volume.withDensity fun x ↦ ENNReal.ofReal (g x)) :=
+    ((hfm.div hgm).mul hhm).aestronglyMeasurable
+  rw [memLp_two_iff_integrable_sq hm, integrable_withDensity_ofReal_iff hgm hg]
+  refine integrable_congr (Eventually.of_forall fun x ↦ ?_)
+  by_cases hgx : g x = 0
+  · simp [hgx]
+  · simp only
+    field_simp
+
+omit [IsProbabilityMeasure P] in
+/-- CDIS P.V, id 100: for an i.i.d. sample of density `g`, the estimator of id 99 has variance
+`Var_g[(f / g) h] / n`. -/
+theorem variance_importanceSampling_estimator (hfm : Measurable f) (hgm : Measurable g)
+    (hhm : Measurable h) [IsProbabilityMeasure P]
+    (hL2 : MemLp (fun x ↦ f x / g x * h x) 2 (volume.withDensity fun x ↦ ENNReal.ofReal (g x)))
+    {X : ℕ → Ω → ℝ} (hlaw : ∀ i, HasLaw (X i) (volume.withDensity fun x ↦ ENNReal.ofReal (g x)) P)
+    (hindep : iIndepFun X P) (n : ℕ) :
+    Var[fun ω ↦ (∑ i ∈ Finset.range n, f (X i ω) / g (X i ω) * h (X i ω)) / n; P] =
+      Var[fun x ↦ f x / g x * h x; volume.withDensity fun x ↦ ENNReal.ofReal (g x)] / n := by
+  set φ : ℝ → ℝ := fun x ↦ f x / g x * h x
+  have hφ : Measurable φ := (hfm.div hgm).mul hhm
+  have hterm : ∀ i, Var[φ ∘ X i; P] = Var[φ; volume.withDensity fun x ↦ ENNReal.ofReal (g x)] :=
+    fun i ↦ by rw [← (hlaw i).map_eq, variance_map hφ.aemeasurable (hlaw i).aemeasurable]
+  have hL2' : ∀ i, MemLp (φ ∘ X i) 2 P := fun i ↦ by
+    rw [← (hlaw i).map_eq] at hL2
+    exact hL2.comp_of_map (hlaw i).aemeasurable
+  have hsum : Var[fun ω ↦ ∑ i ∈ Finset.range n, φ (X i ω); P] =
+      n * Var[φ; volume.withDensity fun x ↦ ENNReal.ofReal (g x)] := by
+    have := IndepFun.variance_sum (s := Finset.range n) (fun i _ ↦ hL2' i)
+      (fun i _ j _ hij ↦ (hindep.comp (fun _ ↦ φ) (fun _ ↦ hφ)).indepFun hij)
+    rw [show (fun ω ↦ ∑ i ∈ Finset.range n, φ (X i ω)) = ∑ i ∈ Finset.range n, φ ∘ X i by
+      ext ω; simp, this]
+    simp [hterm]
+  rcases eq_or_ne n 0 with rfl | hn
+  · simp only [Finset.range_zero, Finset.sum_empty, Nat.cast_zero, div_zero]
+    exact variance_zero P
+  have hn' : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.2 hn
+  rw [show (fun ω ↦ (∑ i ∈ Finset.range n, φ (X i ω)) / n) =
+      fun ω ↦ (n : ℝ)⁻¹ * ∑ i ∈ Finset.range n, φ (X i ω) by ext ω; rw [div_eq_inv_mul],
+    variance_const_mul, hsum]
+  field_simp
+
 end Estimator
+
+section OptimalVariance
+
+variable {f h : ℝ → ℝ}
+
+/-- The instrumental densities of id 100: probability densities `g` that are positive wherever
+`h f ≠ 0` and for which one importance sampling term has finite variance. -/
+def admissibleDensities (f h : ℝ → ℝ) : Set (ℝ → ℝ) :=
+  {g | 0 ≤ g ∧ Measurable g ∧ Integrable g ∧ ∫ x, g x = 1 ∧ (∀ x, g x = 0 → h x * f x = 0) ∧
+    Integrable fun x ↦ (h x * f x) ^ 2 / g x}
+
+/-- The optimal density `g* = |h f| / ∫ |h f|` of id 100. -/
+noncomputable def optimalDensity (f h : ℝ → ℝ) : ℝ → ℝ :=
+  fun x ↦ |h x * f x| / ∫ y, |h y * f y|
+
+/-- The variance of one term under an admissible `g` is `∫ (h f)² / g - (E_f[h])²`. -/
+lemma variance_eq_of_mem_admissibleDensities (hfm : Measurable f) (hhm : Measurable h)
+    {g : ℝ → ℝ} (hgD : g ∈ admissibleDensities f h) :
+    Var[fun x ↦ f x / g x * h x; volume.withDensity fun x ↦ ENNReal.ofReal (g x)] =
+      (∫ x, (h x * f x) ^ 2 / g x) - (∫ x, h x * f x) ^ 2 := by
+  obtain ⟨hg, hgm, hgi, hg1, hsupp, hint⟩ := hgD
+  have := isProbabilityMeasure_withDensity_ofReal hg hgi hg1
+  exact variance_importanceSampling hgm hg hsupp ((memLp_two_ratio_iff hfm hgm hhm hg).2 hint)
+
+/-- CDIS P.V, id 100: `g*` is admissible and minimises the variance of one importance sampling
+term `(f / g) h` under `g` among the admissible densities. -/
+theorem isMinOn_variance_optimalDensity (hfm : Measurable f) (hhm : Measurable h)
+    (hint : Integrable fun x ↦ h x * f x) (hpos : 0 < ∫ x, |h x * f x|) :
+    optimalDensity f h ∈ admissibleDensities f h ∧
+      IsMinOn (fun g ↦ Var[fun x ↦ f x / g x * h x;
+        volume.withDensity fun x ↦ ENNReal.ofReal (g x)]) (admissibleDensities f h)
+        (optimalDensity f h) := by
+  have ha : Measurable fun x ↦ |h x * f x| := by fun_prop
+  obtain ⟨hmem, hmin⟩ := isMinOn_optimal_density (fun x ↦ abs_nonneg (h x * f x)) ha hint.abs hpos
+  have hD : {g : ℝ → ℝ | 0 ≤ g ∧ Measurable g ∧ Integrable g ∧ ∫ x, g x = 1 ∧
+      (∀ x, g x = 0 → |h x * f x| = 0) ∧ Integrable fun x ↦ |h x * f x| ^ 2 / g x} =
+      admissibleDensities f h := by
+    ext g
+    simp only [admissibleDensities, abs_eq_zero, sq_abs]
+  rw [hD] at hmem hmin
+  have hmem' : optimalDensity f h ∈ admissibleDensities f h := hmem
+  refine ⟨hmem', isMinOn_iff.2 fun g hg ↦ ?_⟩
+  have hle : ∫ x, (h x * f x) ^ 2 / optimalDensity f h x ≤ ∫ x, (h x * f x) ^ 2 / g x := by
+    have := isMinOn_iff.1 hmin g hg
+    simp only [sq_abs] at this
+    exact this
+  rw [variance_eq_of_mem_admissibleDensities hfm hhm hg,
+    variance_eq_of_mem_admissibleDensities hfm hhm hmem']
+  linarith
+
+/-- CDIS P.V, id 100, as stated in the course: for every sample size `n`, the importance
+sampling estimator built on an i.i.d. sample of density `g*` has a variance no larger than the
+one built on an i.i.d. sample of any admissible density `g`. -/
+theorem variance_estimator_optimal_le {Ω Ω' : Type*} [MeasurableSpace Ω] [MeasurableSpace Ω']
+    {P : Measure Ω} {P' : Measure Ω'} [IsProbabilityMeasure P] [IsProbabilityMeasure P']
+    (hfm : Measurable f) (hhm : Measurable h) (hint : Integrable fun x ↦ h x * f x)
+    (hpos : 0 < ∫ x, |h x * f x|) {g : ℝ → ℝ} (hgD : g ∈ admissibleDensities f h)
+    {X : ℕ → Ω → ℝ} (hX : ∀ i, HasLaw (X i) (volume.withDensity fun x ↦ ENNReal.ofReal (g x)) P)
+    (hXi : iIndepFun X P) {Y : ℕ → Ω' → ℝ}
+    (hY : ∀ i, HasLaw (Y i)
+      (volume.withDensity fun x ↦ ENNReal.ofReal (optimalDensity f h x)) P')
+    (hYi : iIndepFun Y P') (n : ℕ) :
+    Var[fun ω ↦ (∑ i ∈ Finset.range n,
+        f (Y i ω) / optimalDensity f h (Y i ω) * h (Y i ω)) / n; P'] ≤
+      Var[fun ω ↦ (∑ i ∈ Finset.range n, f (X i ω) / g (X i ω) * h (X i ω)) / n; P] := by
+  obtain ⟨hmem, hmin⟩ := isMinOn_variance_optimalDensity hfm hhm hint hpos
+  have hL2 : ∀ {k : ℝ → ℝ}, k ∈ admissibleDensities f h →
+      MemLp (fun x ↦ f x / k x * h x) 2 (volume.withDensity fun x ↦ ENNReal.ofReal (k x)) :=
+    fun hk ↦ (memLp_two_ratio_iff hfm hk.2.1 hhm hk.1).2 hk.2.2.2.2.2
+  rw [variance_importanceSampling_estimator hfm hmem.2.1 hhm (hL2 hmem) hY hYi,
+    variance_importanceSampling_estimator hfm hgD.2.1 hhm (hL2 hgD) hX hXi]
+  exact div_le_div_of_nonneg_right (hmin hgD) (Nat.cast_nonneg n)
+
+end OptimalVariance
 
 end CDIS

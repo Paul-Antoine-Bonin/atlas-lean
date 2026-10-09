@@ -8,7 +8,7 @@ lean: CDIS.integral_mul_eq_integral_ratio, CDIS.not_forall_integral_eq_integral_
 
 # Importance sampling
 
-CDIS id 99. `E_f[h(X)] = ∫ h (f/g) g` when `g > 0` wherever `f > 0` (the course says
+CDIS id 99. `E_f[h(X)] = ∫ h (f/g) g` when `g > 0` wherever `h f ≠ 0` (the course says
  there is no restriction on `g`; a counterexample is formalized). The plain and
  self-normalised estimators converge almost surely by the strong law of large numbers.
 

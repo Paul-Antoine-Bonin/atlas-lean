@@ -181,8 +181,7 @@ variable {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω} [IsProbabilityMeasur
 
 lemma lintegral_eq_one_of_hasLaw (hXY : HasLaw (fun ω ↦ (X ω, Y ω)) (volume.withDensity f) P) :
     ∫⁻ p, f p = 1 := by
-  have := hXY.map_eq ▸ (Measure.isProbabilityMeasure_map_iff hXY.aemeasurable).2
-    (inferInstance : IsProbabilityMeasure P)
+  have := hXY.map_eq ▸ isProbabilityMeasure_map hXY.aemeasurable
   have h := this.measure_univ
   rwa [withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ] at h
 
@@ -251,24 +250,20 @@ theorem measure_mem_prod_eq (hf : Measurable f) (hX : Measurable X) (hY : Measur
     (hB₁ : MeasurableSet B₁) (hB₂ : MeasurableSet B₂) :
     P {ω | X ω ∈ B₁ ∧ Y ω ∈ B₂} =
       ∫⁻ x in B₁, (∫⁻ y in B₂, condDensity f x y) * marginalFst f x := by
-  have h1 := lintegral_eq_one_of_hasLaw hXY
-  have := isMarkovKernel_condDensityKernel hf
-  have hset : P {ω | X ω ∈ B₁ ∧ Y ω ∈ B₂} = P.map (fun ω ↦ (X ω, Y ω)) (B₁ ×ˢ B₂) := by
-    rw [Measure.map_apply (hX.prodMk hY) (hB₁.prod hB₂)]
-    rfl
-  rw [hset, hXY.map_eq, withDensity_eq_compProd_condDensityKernel hf h1,
-    Measure.compProd_apply_prod hB₁ hB₂,
-    setLIntegral_withDensity_eq_setLIntegral_mul _ (measurable_marginalFst hf)
-      ((condDensityKernel f).measurable_coe hB₂) hB₁]
-  refine setLIntegral_congr_fun_ae hB₁ ?_
-  filter_upwards [ae_marginalFst_ne_top hf h1] with x hxtop _
-  simp only [Pi.mul_apply]
-  rw [condDensityKernel_apply hf, withDensity_apply _ hB₂]
-  by_cases hx0 : marginalFst f x = 0
-  · simp [hx0]
-  · have hx : x ∈ goodSet f := ⟨hx0, hxtop⟩
-    simp only [kernelDensity, hx, ite_true]
-    rw [mul_comm]
+  have h := lintegral_comp_eq_lintegral_condDensity hf hX hY hXY
+    (measurable_one.indicator (hB₁.prod hB₂) : Measurable ((B₁ ×ˢ B₂).indicator (1 : ℝ × ℝ → ℝ≥0∞)))
+  rw [show {ω | X ω ∈ B₁ ∧ Y ω ∈ B₂} = (fun ω ↦ (X ω, Y ω)) ⁻¹' (B₁ ×ˢ B₂) from rfl,
+    ← lintegral_indicator_one ((hX.prodMk hY) (hB₁.prod hB₂))]
+  convert h using 1
+  · exact lintegral_congr fun ω ↦ rfl
+  · rw [← lintegral_indicator hB₁]
+    refine lintegral_congr fun x ↦ ?_
+    by_cases hx : x ∈ B₁
+    · rw [indicator_of_mem hx, ← lintegral_indicator hB₂]
+      congr 1
+      refine lintegral_congr fun y ↦ ?_
+      by_cases hy : y ∈ B₂ <;> simp [hx, hy]
+    · simp [hx]
 
 /-- CDIS P.III, id 54 (density case): `f_Y(y) = ∫ f_{Y|X=x}(y) f_X(x) dx` for almost every `y`.
 Densities are only defined up to null sets, so "for every `y`" in the course becomes "almost
